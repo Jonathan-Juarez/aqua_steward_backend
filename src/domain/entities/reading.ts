@@ -1,0 +1,65 @@
+export interface IReadingMetadata {
+    sensor_id?: string;
+    deposits_id?: string;
+    sensor_type?: string;
+}
+
+export interface IReadingDTO {
+    date: Date | string;
+    value: number;
+    metadata?: IReadingMetadata;
+    createdAt?: Date;
+}
+
+export default class Reading {
+    date: Date;
+    value: number;
+    metadata: IReadingMetadata;
+    createdAt: Date;
+
+    constructor(data: IReadingDTO) {
+        // No hay this.id aleatorio, ya que la identidad es el conjunto (sensor_id + date).
+        this.date = data.date instanceof Date ? data.date : new Date(data.date);
+        this.value = data.value;
+
+        this.metadata = {
+            sensor_id: data.metadata?.sensor_id,
+            deposits_id: data.metadata?.deposits_id,
+            sensor_type: data.metadata?.sensor_type
+        };
+
+        this.createdAt = data.createdAt || new Date();
+    }
+
+    // Método que permite identificar la lectura y que la alerta pueda referenciarla.
+    getUniqueReference(): string {
+        return `${this.metadata.sensor_id}_${this.date.getTime()}`;
+    }
+
+    validate(): void {
+        if (!this.metadata.sensor_id)
+            throw new Error("El id del sensor es requerido.");
+
+        if (!this.metadata.deposits_id)
+            throw new Error("El id del depósito es requerido.");
+
+        if (!this.date || isNaN(this.date.getTime()))
+            throw new Error("La fecha de la lectura es inválida o requerida.");
+
+        const type = this.metadata.sensor_type;
+
+        if (type === "PH-4502C") {
+            if (this.value < 0 || this.value > 14)
+                throw new Error("El valor del pH debe estar entre 0 y 14.");
+        } else if (type === "TS300B") {
+            if (this.value < 0 || this.value > 3000)
+                throw new Error("El valor de turbidez debe estar entre 0 y 3000 NTU.");
+        } else if (type === "HC-SR04") {
+            if (this.value < 0)
+                throw new Error("El nivel de agua no puede ser negativo.");
+        } else {
+            if (this.value < 0)
+                throw new Error("El valor de la lectura no puede ser negativo.");
+        }
+    }
+}
