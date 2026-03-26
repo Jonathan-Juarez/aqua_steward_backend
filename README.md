@@ -9,7 +9,7 @@ El proyecto está construido sobre un backend de Node.js orientado a microservic
 | Categoría | Tecnología |
 |---|---|
 | **Lenguaje** | TypeScript / Node.js |
-| **Framework Web** | Express.js v5 |
+| **Framework Web** | Express |
 | **Base de Datos** | MongoDB (ODM con Mongoose) |
 | **Comunicación en Tiempo Real** | Socket.io |
 | **Internet de las Cosas (IoT)** | MQTT.js (Broker HiveMQ Cloud) |
