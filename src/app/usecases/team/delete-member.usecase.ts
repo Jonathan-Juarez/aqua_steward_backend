@@ -20,9 +20,9 @@ export class DeleteMemberUseCase {
             throw new BadRequestError("No se encontró ningún usuario con el ID proporcionado");
         }
 
-        const assignmentIndex = user.assigned_deposits?.findIndex(a => a.deposit_id === dto.deposit_id);
+        const assignmentIndex = user.assigned_deposits?.findIndex(assigned => assigned.deposit_id?.toString() === dto.deposit_id);
         if (assignmentIndex === undefined || assignmentIndex === -1) {
-            throw new NotFoundError("El miembro a eliminar no se encontró en el equipo");
+            throw new NotFoundError("El miembro a eliminar no se encuentra en el equipo");
         }
 
         await this.teamRepository.delete(dto.deposit_id, dto.user_id);
