@@ -15,7 +15,7 @@ export default class Reading {
     date: Date;
     value: number;
     metadata: IReadingMetadata;
-    createdAt: Date;
+    createdAt?: Date;
 
     constructor(data: IReadingDTO) {
         // No hay this.id aleatorio, ya que la identidad es el conjunto (sensor_id + date).
@@ -28,7 +28,7 @@ export default class Reading {
             sensor_type: data.metadata?.sensor_type
         };
 
-        this.createdAt = data.createdAt || new Date();
+        this.createdAt = data.createdAt;
     }
 
     // Método que permite identificar la lectura y que la alerta pueda referenciarla.
@@ -37,12 +37,6 @@ export default class Reading {
     }
 
     validate(): void {
-        if (!this.metadata.sensor_id)
-            throw new Error("El id del sensor es requerido.");
-
-        if (!this.metadata.deposits_id)
-            throw new Error("El id del depósito es requerido.");
-
         if (!this.date || isNaN(this.date.getTime()))
             throw new Error("La fecha de la lectura es inválida o requerida.");
 

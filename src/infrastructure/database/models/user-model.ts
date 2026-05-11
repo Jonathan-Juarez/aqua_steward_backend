@@ -6,7 +6,7 @@ export interface IUserDoc extends Document {
     last_name: string;
     email: string;
     password?: string;
-    assigned_deposits?: any[];
+    assigned_deposits?: { role: string; deposit_id: any; status: string }[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -36,11 +36,15 @@ const UserSchema = new Schema<IUserDoc>({
     assigned_deposits: [{
         role: {
             type: String,
-            default: "analista"
+            enum: ['owner', 'analyst', 'admin', "technician"]
         },
         deposit_id: {
-            type: Schema.Types.ObjectId,
-            default: null
+            type: Schema.Types.ObjectId
+        },
+        status: {
+            type: String,
+            enum: ['pending', 'accepted', 'rejected'],
+            default: 'pending'
         }
     }],
 }, {

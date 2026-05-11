@@ -1,8 +1,8 @@
-import { IUserRepository } from "../../../domain/repository/user-repository.interface";
+import { IAuthRepository } from "../../../domain/repository/auth-repository.interface";
 import UserModel, { IUserDoc } from "../models/user-model";
 import User from "../../../domain/entities/user";
 
-export default class UserRepositoryMongo implements IUserRepository {
+export default class AuthRepositoryMongo implements IAuthRepository {
 
     // Se mapea internamente el documento de Mongoose a la entidad User.
     private _toDomain(document: IUserDoc | null): User | null {
@@ -48,8 +48,14 @@ export default class UserRepositoryMongo implements IUserRepository {
     }
 
     // Se actualiza la contraseña de un usuario mediante su email.
-    async restorePassword(email: string, newPassword: string): Promise<User | null> {
+    async resetPassword(email: string, newPassword: string): Promise<User | null> {
         const document = await UserModel.findOneAndUpdate({ email }, { password: newPassword }, { new: true });
+        return this._toDomain(document);
+    }
+
+    // Se actualiza un usuario mediante su ID. Se actualiza nombre y apellido.
+    async update(id: string, newData: Partial<User>): Promise<User | null> {
+        const document = await UserModel.findByIdAndUpdate(id, newData, { new: true });
         return this._toDomain(document);
     }
 }

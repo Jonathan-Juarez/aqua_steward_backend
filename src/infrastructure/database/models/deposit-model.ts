@@ -1,5 +1,14 @@
 import { Schema, model, Document } from "mongoose";
 
+export interface ISensorDoc {
+    _id?: any;
+    type: string;
+    state: boolean;
+    unit: string;
+    min_value?: number;
+    max_value?: number;
+}
+
 // Interfaz que tipa los documentos de la colección Deposits. Se extiende de Document para tener acceso a los métodos de Mongoose.
 export interface IDepositsDoc extends Document {
     name: string;
@@ -8,9 +17,9 @@ export interface IDepositsDoc extends Document {
     installation_height: number;
     fill_gap: number;
     owner_id: Schema.Types.ObjectId;
-    sensors?: any[];
-    createdAt?: Date;
-    updatedAt?: Date;
+    sensors: ISensorDoc[];
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 // Se define un esquema de acuerdo con IDepositsDoc.
@@ -43,19 +52,22 @@ const DepositsSchema = new Schema<IDepositsDoc>({
     sensors: [{
         type: {
             type: String,
+            required: true
         },
         state: {
             type: Boolean,
-            default: false
+            required: true
         },
         unit: {
-            type: String
+            type: String,
+            required: true
         },
         min_value: {
-            type: Number
+            type: Number,
         },
         max_value: {
-            type: Number
+            type: Number,
+            required: true
         }
     }],
 }, {

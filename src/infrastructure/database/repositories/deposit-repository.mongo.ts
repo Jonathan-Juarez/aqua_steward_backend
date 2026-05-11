@@ -26,6 +26,11 @@ export default class DepositRepositoryMongo implements IDepositRepository {
         return this._toDomain(document);
     }
 
+    async findById(id: string): Promise<Deposit | null> {
+        const document = await DepositsModel.findById(id);
+        return this._toDomain(document);
+    }
+
     async save(depositEntity: Deposit): Promise<Deposit> {
         const depositData = {
             name: depositEntity.name,
@@ -48,8 +53,17 @@ export default class DepositRepositoryMongo implements IDepositRepository {
         return documents.map(doc => this._toDomain(doc) as Deposit);
     }
 
+    async findByIds(ids: string[]): Promise<Deposit[]> {
+        const documents = await DepositsModel.find({ _id: { $in: ids } });
+        return documents.map(doc => this._toDomain(doc) as Deposit);
+    }
+
     async delete(id: string): Promise<Deposit | null> {
         const deletedDocument = await DepositsModel.findByIdAndDelete(id);
         return this._toDomain(deletedDocument);
+    }
+    async update(id: string, newData: Partial<Deposit>): Promise<Deposit | null> {
+        const updatedDocument = await DepositsModel.findByIdAndUpdate(id, newData, { new: true });
+        return this._toDomain(updatedDocument);
     }
 }

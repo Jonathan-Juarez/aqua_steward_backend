@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { UnauthorizedError } from "../errors/UnauthorizedError";
 
 // Interfaz para inyectar el usuario decodificado en el objeto Request
 export interface AuthRequest extends Request {
@@ -7,23 +8,23 @@ export interface AuthRequest extends Request {
 }
 
 // Middleware de autenticación para verificar el token.
-const auth = (req: AuthRequest, res: Response, next: NextFunction): Response | void => {
+const auth = (req: AuthRequest, res: Response, next: NextFunction): void => {
     try {
         const token = req.header("x-auth-token");
         if (!token) {
-            return res.status(401).json({ msg: "No se proporcionó un token, autorización denegada." });
+            throw new UnauthorizedError("No se proporcionó un token.");
         }
 
         const verified = jwt.verify(token, process.env.JWT_SECRET!);
         if (!verified) {
-            return res.status(401).json({ msg: "La verificación del token falló, autorización denegada." });
+            throw new UnauthorizedError("La verificación del token falló.");
         }
 
         req.user = verified;
 
         next(); // Se continúa al controlador (next middleware)
-    } catch (err: any) {
-        return res.status(500).json({ error: err.message });
+    } catch (e: any) {
+        next(e); // Se delega al middleware global de errores.
     }
 };
 

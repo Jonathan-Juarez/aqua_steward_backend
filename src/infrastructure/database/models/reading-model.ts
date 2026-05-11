@@ -38,6 +38,7 @@ const ReadingsBucketSchema = new Schema<IReadingsBucketDoc>({
         type: Number,
         default: 0
     },
+
     readings: [
         {
             timestamp: { type: Date, required: true },
@@ -49,7 +50,7 @@ const ReadingsBucketSchema = new Schema<IReadingsBucketDoc>({
     timestamps: true
 });
 
-// Indice compuesto para mejorar la eficiencia de las consultas.
+// Indice compuesto que organiza los sensors_id de forma ascendente para encontrar los datos de un sensor en específico y los date_bucket de forma descendente para encontrar los datos más recientes.
 ReadingsBucketSchema.index({ sensor_id: 1, date_bucket: -1 });
 
 const ReadingsBucketModel = model<IReadingsBucketDoc>("ReadingsBucket", ReadingsBucketSchema);
