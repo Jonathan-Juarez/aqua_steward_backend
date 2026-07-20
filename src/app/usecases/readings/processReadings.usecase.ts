@@ -3,6 +3,10 @@ import IReadingRepository from "../../../domain/repository/reading-repository.in
 import IRealTimeGateway from "../../../domain/repository/realtime-repository.interface";
 import { IReadingRawDTO, IReadingProcessedDTO } from "../../dtos/reading.dto";
 import Reading from "../../../domain/entities/reading";
+import NotificationModel from "../../../infrastructure/database/models/notification-model";
+import UserModel from "../../../infrastructure/database/models/user-model";
+import { sendPushNotification } from "../../../infrastructure/services/firebase.service";
+import { Types } from "mongoose";
 
 // Mapa que relaciona cada tópico MQTT con el tipo de sensor correspondiente. Record<string, string> es un mapa donde la clave y el valor son strings.
 const TOPIC_TO_SENSOR: Record<string, string> = {
@@ -10,6 +14,17 @@ const TOPIC_TO_SENSOR: Record<string, string> = {
     "ph": "PH-4502C",
     "turbidez": "TS300B"
 };
+
+// Mapa que asocia el sensor físico con su nombre legible.
+const SENSOR_DISPLAY_NAMES: Record<string, string> = {
+    "HC-SR04": "Nivel de Agua",
+    "PH-4502C": "pH del Agua",
+    "TS300B": "Turbidez del Agua"
+};
+
+// Control de spam/cooldown en memoria: key = `depositId:sensorType` -> value = timestamp del último envío
+const cooldowns = new Map<string, number>();
+const COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutos de pausa para evitar el spam de notificaciones.
 
 // Caso de uso genérico que procesa la lectura de cualquier sensor.
 export default class ProcessReadingsUseCase {
@@ -56,10 +71,98 @@ export default class ProcessReadingsUseCase {
         // Se emite el evento al cliente WebSocket a través de nuestro gateway (puerto de salida)
         this.realTimeGateway.emitDepositUpdate(dto.deviceIp, dto.topicKey, processedValue);
 
+        // Lógica de Detección de Umbrales y Alerta
+        if (sensor) {
+            const min = sensor.min_value;
+            const max = sensor.max_value;
+            let isTriggered = false;
+            let alertMsg = "";
+
+            if (min !== undefined && processedValue < min) {
+                isTriggered = true;
+                alertMsg = `El depósito "${deposit.name}" ha superado el límite inferior: ${processedValue} ${sensor.unit || ""} / ${min} ${sensor.unit || ""}`;
+            } else if (max !== undefined && processedValue > max) {
+                isTriggered = true;
+                alertMsg = `El depósito "${deposit.name}" ha superado el límite superior: ${processedValue} ${sensor.unit || ""} / ${max} ${sensor.unit || ""}`;
+            }
+
+            if (isTriggered) {
+                await this.triggerAlert(deposit, sensorType, sensor, processedValue, alertMsg);
+            }
+        }
+
         return {
             sensorType,
             deviceIp: dto.deviceIp,
             processedValue
         };
+    }
+
+    private async triggerAlert(
+        deposit: any,
+        sensorType: string,
+        sensor: any,
+        value: number,
+        alertMsg: string
+    ): Promise<void> {
+        const cooldownKey = `${deposit.id}:${sensorType}`;
+        const now = Date.now();
+        const lastSent = cooldowns.get(cooldownKey) || 0;
+
+        if (now - lastSent < COOLDOWN_TIME) {
+            // Evitar spam de alertas durante el periodo de enfriamiento
+            return;
+        }
+
+        // Registrar cooldown de inmediato
+        cooldowns.set(cooldownKey, now);
+
+        try {
+            // Guardar la alerta/notificación en la Base de Datos
+            const typeCategory = sensorType === "PH-4502C" ? "pH" : (sensorType === "TS300B" ? "Turbidez" : "Nivel");
+            const notification = new NotificationModel({
+                generation_date: new Date(),
+                state: "activa",
+                title: typeCategory,
+                type: typeCategory,
+                description: alertMsg,
+                sensor_id: sensor._id || sensor.id,
+                deposit_id: deposit.id,
+                reading_trigger: {
+                    value: value,
+                    date: new Date()
+                }
+            });
+            await notification.save();
+
+            // Buscar usuarios asociados al depósito para mandar push.
+            // Se usa $elemMatch para garantizar que deposit_id y status coincidan en el MISMO elemento del array.
+            const depositObjectId = new Types.ObjectId(deposit.id);
+            const users = await UserModel.find({
+                $or: [
+                    { _id: deposit.owner_id },
+                    { assigned_deposits: { $elemMatch: { deposit_id: depositObjectId, status: "accepted" } } }
+                ]
+            });
+
+            // Recopilar todos los tokens FCM
+            const tokens: string[] = [];
+            for (const user of users) {
+                if (user.fcmTokens && user.fcmTokens.length > 0) {
+                    tokens.push(...user.fcmTokens);
+                }
+            }
+
+            // Enviar notificación push multicast
+            if (tokens.length > 0) {
+                const title = `Alerta: ${SENSOR_DISPLAY_NAMES[sensorType] || sensorType}`;
+                await sendPushNotification(tokens, title, alertMsg, {
+                    depositId: deposit.id,
+                    sensorType: sensorType
+                });
+            }
+        } catch (error: any) {
+            console.error("Error al despachar alerta de umbral:", error.message);
+        }
     }
 }

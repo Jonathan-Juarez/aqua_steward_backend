@@ -7,6 +7,7 @@ export interface IUserDoc extends Document {
     email: string;
     password?: string;
     assigned_deposits?: { role: string; deposit_id: any; status: string }[];
+    fcmTokens?: string[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -47,6 +48,10 @@ const UserSchema = new Schema<IUserDoc>({
             default: 'pending'
         }
     }],
+    fcmTokens: {
+        type: [String],
+        default: []
+    }
 }, {
     versionKey: false,
     timestamps: true

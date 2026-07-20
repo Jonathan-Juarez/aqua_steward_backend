@@ -7,6 +7,7 @@ import authRoute from "./infrastructure/routes/auth-route";
 import depositsRoute from "./infrastructure/routes/deposit-route";
 import readingRoute from "./infrastructure/routes/reading-route";
 import teamRoute from "./infrastructure/routes/team-route";
+import notificationRoute from "./infrastructure/routes/notification-route";
 import { errors } from "./infrastructure/middlewares/errors";
 
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/deposit", depositsRoute);
 app.use("/api/reading", readingRoute);
 app.use("/api/team", teamRoute);
+app.use("/api/notifications", notificationRoute);
 
 // Middleware para manejo de errores globales.
 app.use(errors);

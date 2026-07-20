@@ -1,6 +1,7 @@
-import IReadingRepository from "../../../domain/repository/reading-repository.interface";
+import IReadingRepository, { ExportedReading } from "../../../domain/repository/reading-repository.interface";
 import Reading from "../../../domain/entities/reading";
 import ReadingsBucketModel from "../models/reading-model";
+import { Types } from "mongoose";
 
 // Implementación del repositorio de lecturas usando el bucket pattern en MongoDB.
 export default class ReadingRepositoryMongo implements IReadingRepository {
@@ -152,6 +153,79 @@ export default class ReadingRepositoryMongo implements IReadingRepository {
             const average = dailyData[i].count > 0 ? dailyData[i].sum / dailyData[i].count : 0;
             results[i].value = parseFloat(average.toFixed(1));
         }
+
+        return results;
+    }
+    // Permite exportar las lecutras de los sensores seleccionados.
+    // Para ello, agrupa las lecturas por sensor y por rango temporal.
+    // Filtra las lecturas por depósito y sensor.
+    async exportReadings(depositId: string, sensorIds: string[], filter: string): Promise<ExportedReading[]> {
+        const sensorObjectIds = sensorIds.map(id => new Types.ObjectId(id));
+        const depositObjectId = new Types.ObjectId(depositId);
+
+        let startDate = new Date();
+        let endDate = new Date();
+
+        if (filter === "Dia") {
+            startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0);
+            endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+        } else if (filter === "Semana") {
+            const dayOfWeek = startDate.getDay();
+            startDate.setDate(startDate.getDate() - dayOfWeek);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 6);
+            endDate.setHours(23, 59, 59, 999);
+        } else if (filter === "Mes") {
+            startDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1, 0, 0, 0, 0);
+            endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0, 23, 59, 59, 999);
+        }
+
+        const results = await ReadingsBucketModel.aggregate([
+            {
+                $match: {
+                    deposit_id: depositObjectId,
+                    sensor_id: { $in: sensorObjectIds },
+                    date_bucket: { $gte: startDate, $lte: endDate }
+                }
+            },
+            { $unwind: "$readings" },
+            {
+                $lookup: {
+                    from: "deposits",
+                    localField: "deposit_id",
+                    foreignField: "_id",
+                    as: "deposit"
+                }
+            },
+            { $unwind: "$deposit" },
+            {
+                $project: {
+                    timestamp: "$readings.timestamp",
+                    value: "$readings.value",
+                    depositName: "$deposit.name",
+                    sensor: {
+                        $filter: {
+                            input: "$deposit.sensors",
+                            as: "s",
+                            cond: { $eq: ["$$s._id", "$sensor_id"] }
+                        }
+                    }
+                }
+            },
+            { $unwind: "$sensor" },
+            {
+                $project: {
+                    _id: 0,
+                    timestamp: 1,
+                    value: 1,
+                    unit: "$sensor.unit",
+                    sensorType: "$sensor.type",
+                    depositName: 1
+                }
+            },
+            { $sort: { timestamp: 1 } }
+        ]);
 
         return results;
     }

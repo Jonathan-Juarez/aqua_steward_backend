@@ -5,14 +5,16 @@ import DeleteDepositUseCase from "../../app/usecases/deposits/delete-deposit.use
 import UpdateDepositUseCase from "../../app/usecases/deposits/update-deposit.usecase";
 import MongoDepositRepository from "../database/repositories/deposit-repository.mongo";
 import MongoAuthRepository from "../database/repositories/auth-repository.mongo";
+import { TeamRepositoryMongo } from "../database/repositories/team-repository.mongo";
 import { AuthRequest } from "../middlewares/auth";
 
 // Se instancia el repositorio y se inyecta a los casos de uso.
 const depositRepository = new MongoDepositRepository();
 const authRepository = new MongoAuthRepository();
+const teamRepository = new TeamRepositoryMongo();
 const createDepositUseCase = new CreateDepositUseCase(depositRepository, authRepository);
 const getDepositsUseCase = new GetDepositsUseCase(depositRepository, authRepository);
-const deleteDepositUseCase = new DeleteDepositUseCase(depositRepository);
+const deleteDepositUseCase = new DeleteDepositUseCase(depositRepository, teamRepository);
 const updateDepositUseCase = new UpdateDepositUseCase(depositRepository);
 
 // Se crea un nuevo depósito con los datos del body.

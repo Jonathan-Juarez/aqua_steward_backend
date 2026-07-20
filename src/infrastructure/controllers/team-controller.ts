@@ -8,14 +8,16 @@ import { RejectInvitationUseCase } from "../../app/usecases/team/reject-invitati
 import { GetInvitationUseCase } from "../../app/usecases/team/get-invitation.usecase";
 import { TeamRepositoryMongo } from "../database/repositories/team-repository.mongo";
 import MongoAuthRepository from "../database/repositories/auth-repository.mongo";
+import DepositRepositoryMongo from "../database/repositories/deposit-repository.mongo";
 import { AuthRequest } from "../middlewares/auth";
 
 const teamRepository = new TeamRepositoryMongo();
 const authRepository = new MongoAuthRepository();
+const depositRepository = new DepositRepositoryMongo();
 const getTeamUseCase = new GetTeamUseCase(teamRepository);
-const inviteMemberUseCase = new InviteMemberUseCase(teamRepository, authRepository);
-const updateMemberUseCase = new UpdateMemberUseCase(teamRepository, authRepository);
-const deleteMemberUseCase = new DeleteMemberUseCase(teamRepository, authRepository);
+const inviteMemberUseCase = new InviteMemberUseCase(teamRepository, authRepository, depositRepository);
+const updateMemberUseCase = new UpdateMemberUseCase(teamRepository, authRepository, depositRepository);
+const deleteMemberUseCase = new DeleteMemberUseCase(teamRepository, authRepository, depositRepository);
 const acceptInvitationUseCase = new AcceptInvitationUseCase(teamRepository, authRepository);
 const rejectInvitationUseCase = new RejectInvitationUseCase(teamRepository, authRepository);
 const getInvitationUseCase = new GetInvitationUseCase(teamRepository, authRepository);

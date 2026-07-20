@@ -19,3 +19,9 @@ export interface GetReadingsDTO {
     filter: string;
 }
 
+export interface ExportReadingsDTO {
+    depositId: string;
+    sensorTypes: string[];
+    filter: string; // "Dia" | "Semana" | "Mes"
+}
+

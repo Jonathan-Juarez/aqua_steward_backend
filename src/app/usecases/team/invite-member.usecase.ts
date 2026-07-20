@@ -1,14 +1,17 @@
 import { ITeamRepository } from "../../../domain/repository/team-repository.interface";
 import { IAuthRepository } from "../../../domain/repository/auth-repository.interface";
+import { IDepositRepository } from "../../../domain/repository/deposit-repository.interface";
 import TeamMember from "../../../domain/entities/team";
 import { InviteMemberDTO } from "../../dtos/team.dto";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { ConflictError } from "../../../infrastructure/errors/ConflictError";
+import { sendPushNotification } from "../../../infrastructure/services/firebase.service";
 
 export class InviteMemberUseCase {
     constructor(
         private teamRepository: ITeamRepository,
-        private authRepository: IAuthRepository
+        private authRepository: IAuthRepository,
+        private depositRepository: IDepositRepository
     ) { }
 
     async execute(dto: InviteMemberDTO): Promise<TeamMember> {
@@ -28,6 +31,29 @@ export class InviteMemberUseCase {
 
         const member = await this.teamRepository.invite(dto.deposit_id, dto.email, dto.role);
         if (!member) throw new BadRequestError("No se pudo invitar al miembro");
+
+        // Obtener información del depósito para la notificación push
+        const deposit = await this.depositRepository.findById(dto.deposit_id);
+        const depositName = deposit ? deposit.name : "un depósito";
+
+        // Enviar notificación push al usuario invitado
+        if (user.fcmTokens && user.fcmTokens.length > 0) {
+            const roleLabels: Record<string, string> = {
+                admin: "Administrador",
+                analyst: "Analista",
+                technician: "Técnico"
+            };
+            const roleLabel = roleLabels[dto.role] || dto.role;
+            await sendPushNotification(
+                user.fcmTokens,
+                "Nueva invitación de equipo",
+                `Has sido invitado a colaborar en el depósito "${depositName}" como ${roleLabel}.`,
+                {
+                    type: "invitation",
+                    deposit_id: dto.deposit_id
+                }
+            );
+        }
         
         return member;
     }

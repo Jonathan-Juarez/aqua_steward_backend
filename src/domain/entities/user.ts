@@ -7,6 +7,7 @@ export interface IUserDTO {
     email?: string;
     password?: string;
     assigned_deposits?: { role: string; deposit_id: string; status?: string }[];
+    fcmTokens?: string[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -18,6 +19,7 @@ export default class User {
     email?: string;
     password?: string;
     assigned_deposits: { role: string; deposit_id: string; status?: string }[];
+    fcmTokens?: string[];
     createdAt?: Date;
     updatedAt?: Date;
 
@@ -30,6 +32,7 @@ export default class User {
 
         // Si no se asignan depósitos, es un array vacío por defecto.
         this.assigned_deposits = data.assigned_deposits || [];
+        this.fcmTokens = data.fcmTokens || [];
         this.createdAt = data.createdAt;
         this.updatedAt = data.updatedAt;
     }
