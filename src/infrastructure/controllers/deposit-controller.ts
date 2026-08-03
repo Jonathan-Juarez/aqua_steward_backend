@@ -17,29 +17,31 @@ const getDepositsUseCase = new GetDepositsUseCase(depositRepository, authReposit
 const deleteDepositUseCase = new DeleteDepositUseCase(depositRepository, teamRepository);
 const updateDepositUseCase = new UpdateDepositUseCase(depositRepository);
 
-// Se crea un nuevo depósito con los datos del body.
-export const createDeposit = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    const savedDeposit = await createDepositUseCase.execute(req.body);
-    return res.status(201).json(savedDeposit);
-}
+export class DepositController {
+    // Se crea un nuevo depósito con los datos del body.
+    static async createDeposit(req: AuthRequest, res: Response) {
+        const savedDeposit = await createDepositUseCase.execute(req.body);
+        return res.status(201).json(savedDeposit);
+    }
 
-// Se obtienen los depósitos del usuario autenticado.
-export const getDeposits = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    const ownerId = String(req.user.id);
-    const deposits = await getDepositsUseCase.execute(ownerId);
-    return res.status(200).json(deposits);
-}
+    // Se obtienen los depósitos del usuario autenticado.
+    static async getDeposits(req: AuthRequest, res: Response) {
+        const ownerId = String(req.user.id);
+        const deposits = await getDepositsUseCase.execute(ownerId);
+        return res.status(200).json(deposits);
+    }
 
-// Se elimina un depósito por su ID de parámetro.
-export const deleteDeposit = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    const depositId = String(req.params.id);
-    const deletedDeposit = await deleteDepositUseCase.execute(depositId);
-    return res.status(200).json(deletedDeposit);
-}
+    // Se elimina un depósito por su ID de parámetro.
+    static async deleteDeposit(req: AuthRequest, res: Response) {
+        const depositId = String(req.params.id);
+        const deletedDeposit = await deleteDepositUseCase.execute(depositId);
+        return res.status(200).json(deletedDeposit);
+    }
 
-// Se actualiza un depósito por su ID con los datos parciales del body.
-export const updateDeposit = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    const depositId = String(req.params.id);
-    const updatedDeposit = await updateDepositUseCase.execute(depositId, req.body);
-    return res.status(200).json(updatedDeposit);
+    // Se actualiza un depósito por su ID con los datos parciales del body.
+    static async updateDeposit(req: AuthRequest, res: Response) {
+        const depositId = String(req.params.id);
+        const updatedDeposit = await updateDepositUseCase.execute(depositId, req.body);
+        return res.status(200).json(updatedDeposit);
+    }
 }

@@ -17,32 +17,35 @@ const deleteNotificationUseCase = new DeleteNotificationUseCase(notificationRepo
 const deleteAllNotificationsUseCase = new DeleteAllNotificationsUseCase(notificationRepository);
 const markNotificationsAsReadUseCase = new MarkNotificationsAsReadUseCase(notificationRepository);
 
-export const registerToken = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    await registerTokenUseCase.execute(req.user.id, req.body);
-    return res.status(200).json({});
-};
+export class NotificationController {
+    static async registerToken(req: AuthRequest, res: Response) {
+        await registerTokenUseCase.execute(req.user.id, req.body);
+        return res.status(200).json({});
+    }
 
-export const unregisterToken = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    await unregisterTokenUseCase.execute(req.user.id, req.body);
-    return res.status(200).json({});
-};
+    static async unregisterToken(req: AuthRequest, res: Response) {
+        await unregisterTokenUseCase.execute(req.user.id, req.body);
+        return res.status(200).json({});
+    }
 
-export const getNotifications = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    const result = await getNotificationsUseCase.execute(req.user.id);
-    return res.status(200).json(result);
-};
+    static async getNotifications(req: AuthRequest, res: Response) {
+        const result = await getNotificationsUseCase.execute(req.user.id);
+        return res.status(200).json(result);
+    }
 
-export const deleteNotification = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    await deleteNotificationUseCase.execute(req.params.id as string);
-    return res.status(200).json({});
-};
+    static async deleteNotification(req: AuthRequest, res: Response) {
+        await deleteNotificationUseCase.execute(req.params.id as string);
+        return res.status(200).json({});
+    }
 
-export const deleteAllNotifications = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    await deleteAllNotificationsUseCase.execute(req.user.id);
-    return res.status(200).json({});
-};
+    static async deleteAllNotifications(req: AuthRequest, res: Response) {
+        await deleteAllNotificationsUseCase.execute(req.user.id);
+        return res.status(200).json({});
+    }
 
-export const markNotificationsAsRead = async (req: AuthRequest, res: Response): Promise<Response | void> => {
-    await markNotificationsAsReadUseCase.execute(req.user.id);
-    return res.status(200).json({});
-};
+    static async markNotificationsAsRead(req: AuthRequest, res: Response) {
+        const { notificationId } = req.body;
+        await markNotificationsAsReadUseCase.execute(req.user.id, notificationId);
+        return res.status(200).json({});
+    }
+}

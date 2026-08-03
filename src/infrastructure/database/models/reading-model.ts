@@ -1,4 +1,5 @@
 import { Schema, model, Document, Types } from "mongoose";
+import { roundTo1Decimal } from "../../../domain/utils/number-utils";
 
 export interface IReading {
     timestamp: Date;
@@ -36,18 +37,25 @@ const ReadingsBucketSchema = new Schema<IReadingsBucketDoc>({
     // Útil para promedios rápidos (sin necesidad de procesar todo el bucket).
     sum: {
         type: Number,
-        default: 0
+        default: 0,
+        get: (num: number) => roundTo1Decimal(num)
     },
 
     readings: [
         {
             timestamp: { type: Date, required: true },
-            value: { type: Number, required: true }
+            value: {
+                type: Number,
+                required: true,
+                get: (num: number) => roundTo1Decimal(num)
+            }
         }
     ]
 }, {
     versionKey: false,
-    timestamps: true
+    timestamps: true,
+    toJSON: { getters: true },
+    toObject: { getters: true }
 });
 
 // Indice compuesto que organiza los sensors_id de forma ascendente para encontrar los datos de un sensor en específico y los date_bucket de forma descendente para encontrar los datos más recientes.

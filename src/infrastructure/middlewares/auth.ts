@@ -15,14 +15,19 @@ const auth = (req: AuthRequest, res: Response, next: NextFunction): void => {
             throw new UnauthorizedError("No se proporcionó un token.");
         }
 
-        const verified = jwt.verify(token, process.env.JWT_SECRET!);
-        if (!verified) {
-            throw new UnauthorizedError("La verificación del token falló.");
+        try {
+            const verified = jwt.verify(token, process.env.JWT_SECRET!);
+            if (!verified) {
+                throw new UnauthorizedError("La verificación del token falló.");
+            }
+            req.user = verified;
+            next();
+        } catch (jwtErr: any) {
+            if (jwtErr.name === "TokenExpiredError") {
+                throw new UnauthorizedError("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+            }
+            throw new UnauthorizedError("El token de autenticación no es válido.");
         }
-
-        req.user = verified;
-
-        next(); // Se continúa al controlador (next middleware)
     } catch (e: any) {
         next(e); // Se delega al middleware global de errores.
     }

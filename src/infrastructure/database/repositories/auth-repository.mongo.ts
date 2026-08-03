@@ -1,6 +1,10 @@
 import { IAuthRepository } from "../../../domain/repository/auth-repository.interface";
 import UserModel, { IUserDoc } from "../models/user-model";
+import DepositsModel from "../models/deposit-model";
+import ReadingsBucketModel from "../models/reading-model";
+import NotificationModel from "../models/notification-model";
 import User from "../../../domain/entities/user";
+import { Types } from "mongoose";
 
 export default class AuthRepositoryMongo implements IAuthRepository {
 
@@ -58,5 +62,33 @@ export default class AuthRepositoryMongo implements IAuthRepository {
     async update(id: string, newData: Partial<User>): Promise<User | null> {
         const document = await UserModel.findByIdAndUpdate(id, newData, { new: true });
         return this._toDomain(document);
+    }
+
+    async delete(email: string): Promise<void> {
+        const user = await UserModel.findOne({ email });
+        if (!user) return;
+
+        const userId = new Types.ObjectId(user._id.toString());
+
+        // Buscar todos los depósitos donde el usuario es el dueño (owner_id)
+        const ownedDeposits = await DepositsModel.find({ owner_id: userId as any }).select("_id").lean();
+        const ownedDepositIds = ownedDeposits.map(d => d._id);
+
+        if (ownedDepositIds.length > 0) {
+            // Eliminar todas las lecturas (ReadingsBucket) pertenecientes a los depósitos del usuario
+            await ReadingsBucketModel.deleteMany({ deposit_id: { $in: ownedDepositIds } });
+
+            // Eliminar todas las notificaciones asociadas a los depósitos del usuario
+            await NotificationModel.deleteMany({ deposit_id: { $in: ownedDepositIds } });
+
+            // Eliminar los depósitos creados por el usuario
+            await DepositsModel.deleteMany({ owner_id: userId as any });
+        }
+
+        // Eliminar notificaciones enviadas directamente al usuario
+        await NotificationModel.deleteMany({ user_id: userId });
+
+        // Eliminar el usuario
+        await UserModel.findByIdAndDelete(userId);
     }
 }

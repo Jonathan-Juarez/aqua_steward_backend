@@ -1,4 +1,6 @@
 import { IDepositRepository } from "../../../domain/repository/deposit-repository.interface";
+import { roundTo1Decimal } from "../../../domain/utils/number-utils";
+import { evaluateThreshold } from "../../../domain/utils/threshold-utils";
 import IReadingRepository from "../../../domain/repository/reading-repository.interface";
 import IRealTimeGateway from "../../../domain/repository/realtime-repository.interface";
 import { IReadingRawDTO, IReadingProcessedDTO } from "../../dtos/reading.dto";
@@ -17,9 +19,9 @@ const TOPIC_TO_SENSOR: Record<string, string> = {
 
 // Mapa que asocia el sensor físico con su nombre legible.
 const SENSOR_DISPLAY_NAMES: Record<string, string> = {
-    "HC-SR04": "Nivel de Agua",
-    "PH-4502C": "pH del Agua",
-    "TS300B": "Turbidez del Agua"
+    "HC-SR04": "🚨 Alerta de Nivel",
+    "PH-4502C": "🚨 Alerta de pH",
+    "TS300B": "🚨 Alerta de Turbidez"
 };
 
 // Control de spam/cooldown en memoria: key = `depositId:sensorType` -> value = timestamp del último envío
@@ -47,8 +49,8 @@ export default class ProcessReadingsUseCase {
             throw new Error(`Sensor ${sensorType} en ${deposit.name} no está activo.`);
         }
 
-        // Se transforma el valor crudo al valor físico usando la entidad de dominio.
-        const processedValue = deposit.transformRawValue(sensorType, dto.rawValue);
+        // Se transforma el valor crudo al valor físico usando la entidad de dominio y se redondea a 1 decimal máximo.
+        const processedValue = roundTo1Decimal(deposit.transformRawValue(sensorType, dto.rawValue));
 
         // Se obtiene el ID del sensor desde la entidad para la metadata de la lectura.
         const sensor = deposit.sensors.find(sensor => sensor.type === sensorType);
@@ -73,21 +75,10 @@ export default class ProcessReadingsUseCase {
 
         // Lógica de Detección de Umbrales y Alerta
         if (sensor) {
-            const min = sensor.min_value;
-            const max = sensor.max_value;
-            let isTriggered = false;
-            let alertMsg = "";
+            const evaluation = evaluateThreshold(processedValue, sensor.min_value, sensor.max_value, deposit.name, sensor.unit || "");
 
-            if (min !== undefined && processedValue < min) {
-                isTriggered = true;
-                alertMsg = `El depósito "${deposit.name}" ha superado el límite inferior: ${processedValue} ${sensor.unit || ""} / ${min} ${sensor.unit || ""}`;
-            } else if (max !== undefined && processedValue > max) {
-                isTriggered = true;
-                alertMsg = `El depósito "${deposit.name}" ha superado el límite superior: ${processedValue} ${sensor.unit || ""} / ${max} ${sensor.unit || ""}`;
-            }
-
-            if (isTriggered) {
-                await this.triggerAlert(deposit, sensorType, sensor, processedValue, alertMsg);
+            if (evaluation.isTriggered) {
+                await this.triggerAlert(deposit, sensorType, sensor, evaluation.triggerValue, evaluation.message);
             }
         }
 
@@ -123,7 +114,7 @@ export default class ProcessReadingsUseCase {
             const notification = new NotificationModel({
                 generation_date: new Date(),
                 state: "activa",
-                title: typeCategory,
+                title: SENSOR_DISPLAY_NAMES[sensorType],
                 type: typeCategory,
                 description: alertMsg,
                 sensor_id: sensor._id || sensor.id,
@@ -155,7 +146,7 @@ export default class ProcessReadingsUseCase {
 
             // Enviar notificación push multicast
             if (tokens.length > 0) {
-                const title = `Alerta: ${SENSOR_DISPLAY_NAMES[sensorType] || sensorType}`;
+                const title = `${SENSOR_DISPLAY_NAMES[sensorType]}`;
                 await sendPushNotification(tokens, title, alertMsg, {
                     depositId: deposit.id,
                     sensorType: sensorType

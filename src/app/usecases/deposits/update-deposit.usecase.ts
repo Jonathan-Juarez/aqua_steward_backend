@@ -10,45 +10,33 @@ export default class UpdateDepositUseCase {
     async execute(id: string, data: Partial<Deposit>): Promise<Deposit | null> {
         if (!id) throw new BadRequestError("No se proporcionó el ID del depósito a actualizar");
 
-        const deposit = await this.depositRepository.findById(id);
+        // Se obtiene el depósito existente.
+        const existingDeposit = await this.depositRepository.findById(id);
+        if (!existingDeposit) throw new NotFoundError("No se encontró el depósito a actualizar");
 
-        if (!deposit) throw new NotFoundError("No se encontró el depósito a actualizar");
+        // Se preservan los _id de MongoDB de los sensores existentes para conservar el historial.
+        const mergedSensors = data.sensors?.map(newSensor => {
+            const currentSensor = existingDeposit.sensors?.find(s => s.type === newSensor.type);
+            return currentSensor?._id ? { ...newSensor, _id: currentSensor._id } : newSensor;
+        }) ?? existingDeposit.sensors;
 
+        // Se crea la nueva entidad de Dominio fusionada.
+        const updatedDeposit = new Deposit({
+            ...existingDeposit,
+            ...data,
+            sensors: mergedSensors
+        });
 
-        // Define las propiedades primitivas que pueden ser actualizadas.
-        const updatableProperties: (keyof Partial<Deposit>)[] = ['name', 'ip', 'capacity', 'installation_height', 'fill_gap'];
+        // Se validan las reglas de negocio en la Entidad (IP, dimensiones y al menos un sensor activo).
+        updatedDeposit.validate();
 
-        // Comprueba si alguna de las propiedades primitivas enviadas difiere del registro actual.
-        const hasPrimitiveChanges = updatableProperties.some(property => data[property] !== undefined && data[property] !== deposit[property]);
-
-        // Verifica si la configuración de los sensores ha sido alterada, ignorando los identificadores de MongoDB.
-        const hasSensorChanges = data.sensors && deposit.sensors && (
-            data.sensors.length !== deposit.sensors.length ||
-            data.sensors.some(newSensor => {
-                const existingSensor = deposit.sensors!.find(sensor => sensor.type === newSensor.type);
-                return !existingSensor ||
-                    existingSensor.state !== newSensor.state ||
-                    existingSensor.min_value !== newSensor.min_value ||
-                    existingSensor.max_value !== newSensor.max_value ||
-                    existingSensor.unit !== newSensor.unit;
-            })
-        );
-
-        // Interrumpe la operación si no se registra ninguna alteración en los datos.
-        if (!hasPrimitiveChanges && !hasSensorChanges) throw new ConflictError("No se detectaron cambios para actualizar");
-
-        // Se evalúa si el sensor existe y si tiene un _id para conservarlo y no perder el historial.
-        if (data.sensors && deposit.sensors) {
-            data.sensors = data.sensors.map(newSensor => {
-                const existingSensor = deposit.sensors.find(sensor => sensor.type === newSensor.type);
-                // Si el sensor existe y tiene un _id, se le asigna el _id del sensor existente para no perder el historial.
-                if (existingSensor && existingSensor._id) {
-                    return { ...newSensor, _id: existingSensor._id };
-                }
-                return newSensor;
-            });
+        // Si cambió la IP, se verifica que no esté duplicada en otro depósito.
+        if (data.ip && data.ip !== existingDeposit.ip) {
+            const ipConflict = await this.depositRepository.findByIp(data.ip);
+            if (ipConflict) throw new ConflictError("La IP ya pertenece a otro depósito");
         }
 
-        return await this.depositRepository.update(id, data);
+        // Se guardan los cambios.
+        return await this.depositRepository.update(id, updatedDeposit);
     }
 }

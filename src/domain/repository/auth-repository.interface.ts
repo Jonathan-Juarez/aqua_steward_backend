@@ -7,4 +7,5 @@ export interface IAuthRepository {
     findByEmail(email: string): Promise<User | null>;
     // Partial<User> significa que se pueden actualizar solo algunos campos, ya que son opcionales (Se actualiza nombre y apellido).
     update(id: string, newData: Partial<User>): Promise<User | null>;
+    delete(email: string): Promise<void>;
 }

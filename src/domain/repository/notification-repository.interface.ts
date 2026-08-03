@@ -4,5 +4,5 @@ export interface INotificationRepository {
     getNotifications(userId: string): Promise<any[]>;
     deleteNotification(notificationId: string): Promise<void>;
     deleteAllNotifications(userId: string): Promise<void>;
-    markNotificationAsRead(userId: string): Promise<void>;
+    markNotificationAsRead(userId: string, notificationId?: string): Promise<void>;
 }

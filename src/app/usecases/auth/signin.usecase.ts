@@ -18,7 +18,7 @@ export default class SigninUseCase {
             throw new BadRequestError("El correo o contraseña es incorrecto");
         }
 
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: "365d" });
 
         const userWithoutPassword = {
             id: user.id,

@@ -10,10 +10,16 @@ export const errors = (e: Error, req: Request, res: Response, next: NextFunction
         });
     }
 
+    if (e.name === "TokenExpiredError" || e.name === "JsonWebTokenError") {
+        return res.status(401).json({
+            errors: [{ message: "Tu sesión ha expirado. Por favor, inicia sesión nuevamente." }],
+        });
+    }
+
     // Si el error no es controlado, se muestra uno genérico.
     console.error("Error inesperado:", e);
 
-    res.status(500).json({
+    return res.status(500).json({
         errors: [{ message: "Error interno del servidor" }],
     });
 };

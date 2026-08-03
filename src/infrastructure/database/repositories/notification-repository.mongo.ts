@@ -105,7 +105,12 @@ export default class NotificationRepositoryMongo implements INotificationReposit
         });
     }
 
-    async markNotificationAsRead(userId: string): Promise<void> {
+    async markNotificationAsRead(userId: string, notificationId?: string): Promise<void> {
+        // Si se proporciona un ID, marcar esa notificación como leída.
+        if (notificationId) {
+            await NotificationModel.findByIdAndUpdate(notificationId, { $set: { state: "inactiva" } });
+            return;
+        }
         const user = await UserModel.findById(userId);
         if (!user) return;
 
@@ -119,6 +124,7 @@ export default class NotificationRepositoryMongo implements INotificationReposit
         const allDepositIds = [...ownedIds, ...assignedIds];
 
         const userObjectId = new Types.ObjectId(userId);
+        // Marcar todas las notificaciones del usuario como leídas.
         await NotificationModel.updateMany(
             {
                 $or: [

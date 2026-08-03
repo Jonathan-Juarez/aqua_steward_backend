@@ -3,8 +3,8 @@
 #include <WiFiClientSecure.h>
 
 // --- Credenciales y Configuración ---
-const char* ssid = "ULV-ESTUDIANTES";
-const char* password = "3STUDI4NT3S";
+const char* ssid = "Ptr Juarez_EXT";
+const char* password = "930939Juarez";
 
 const char* mqtt_server = "8ec97f4f3bc645adbf9cc4d7dfa81a6a.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
@@ -165,7 +165,8 @@ void loop() {
       Serial.println("Error: Sensor no detecta eco.");
     } else {
       String topicDistancia = topicBase + "/distancia";
-      client.publish(topicDistancia.c_str(), String(distance).c_str(), true);
+      // No se retienen los datos (false).
+      client.publish(topicDistancia.c_str(), String(distance).c_str(), false);
 
       Serial.print("Distancia: ");
       Serial.print(distance);
@@ -177,7 +178,7 @@ void loop() {
     // Publicación de turbidez (ADC crudo promedio).
     float adcTurbidez = leerADCPromedio(turbidezPin);
     String topicTurb = topicBase + "/turbidez";
-    client.publish(topicTurb.c_str(), String(adcTurbidez, 2).c_str(), true);
+    client.publish(topicTurb.c_str(), String(adcTurbidez, 2).c_str(), false);
 
     Serial.print("ADC Turbidez: ");
     Serial.println(adcTurbidez, 2);
@@ -185,7 +186,7 @@ void loop() {
     // Publicación de pH (ADC crudo promedio).
     float adcPH = leerADCPromedio(phPin);
     String topicPH = topicBase + "/ph";
-    client.publish(topicPH.c_str(), String(adcPH, 2).c_str(), true);
+    client.publish(topicPH.c_str(), String(adcPH, 2).c_str(), false);
     Serial.print("ADC pH: ");
     Serial.println(adcPH, 2);
 
