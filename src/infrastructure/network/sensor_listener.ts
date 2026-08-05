@@ -36,7 +36,7 @@ const sensorListener = (io: any) => {
             // Se delega la lógica de negocio al caso de uso.
             const result = await processSensorReading.execute({ deviceIp, topicKey, rawValue });
 
-            console.log(`Sensor ${result.sensorType}: ${rawValue} de ${deviceIp} → ${result.processedValue}`);
+            console.log(`Sensor ${result.sensorType}: ${rawValue} -> ${result.processedValue} de ${deviceIp}`);
 
         } catch (error: any) {
             // Se omiten errores esperados como IP desconocida o sensor inactivo.
