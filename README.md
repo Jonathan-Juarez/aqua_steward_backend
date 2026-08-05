@@ -14,6 +14,8 @@ El proyecto está construido sobre un backend de Node.js orientado a microservic
 | **Comunicación en Tiempo Real** | Socket.io |
 | **Internet de las Cosas (IoT)** | MQTT.js (Broker HiveMQ Cloud) |
 | **Autenticación** | JSON Web Tokens (JWT) y bcryptjs |
+| **Notificaciones Push** | Firebase Admin SDK (FCM) |
+| **Seguridad** | express-rate-limit |
 | **Herramientas de Desarrollo** | Nodemon, ts-node |
 
 ## Estructura del Proyecto con Clean Architecture
@@ -25,16 +27,22 @@ src/
 ├── domain/                          # Capa de Dominio (núcleo de negocio)
 │   ├── entities/                    # Entidades con reglas de negocio internas
 │   │   ├── deposit.ts
+│   │   ├── notification.ts
 │   │   ├── reading.ts
-│   │   ├── user.ts
 │   │   ├── team.ts
-│   │   └── alert.js
-│   └── repository/                  # Puertos: interfaces (contratos) de repositorio
-│       ├── auth-repository.interface.ts
-│       ├── deposit-repository.interface.ts
-│       ├── reading-repository.interface.ts
-│       ├── team-repository.interface.ts
-│       └── realtime-repository.interface.ts   # Puerto de salida para WebSocket
+│   │   └── user.ts
+│   ├── repository/                  # Puertos: interfaces (contratos) de repositorio
+│   │   ├── auth-repository.interface.ts
+│   │   ├── deposit-repository.interface.ts
+│   │   ├── notification-repository.interface.ts
+│   │   ├── reading-repository.interface.ts
+│   │   ├── realtime-repository.interface.ts   # Puerto de salida para WebSocket
+│   │   └── team-repository.interface.ts
+│   └── utils/                       # Utilidades de dominio (fechas, números, umbrales, rate limiting)
+│       ├── date-utils.ts
+│       ├── number-utils.ts
+│       ├── rate_limit.ts            # Fábrica de limitadores de tasa con tiempo restante dinámico
+│       └── threshold-utils.ts
 │
 ├── app/                             # Capa de Aplicación (casos de uso)
 │   ├── dtos/                        # Objetos de Transferencia de Datos
@@ -43,68 +51,86 @@ src/
 │   │   └── team.dto.ts
 │   └── usecases/
 │       ├── auth/
-│       │   ├── signup.usecase.ts
-│       │   ├── signin.usecase.ts
+│       │   ├── delete-user.usecase.ts
 │       │   ├── reset-password.usecase.ts
+│       │   ├── signin.usecase.ts
+│       │   ├── signup.usecase.ts
 │       │   └── update-user.usecase.ts
 │       ├── deposits/
 │       │   ├── create-deposit.usecase.ts
-│       │   ├── get-deposits.usecase.ts
 │       │   ├── delete-deposit.usecase.ts
-│       │   └── update-deposit.usecase.ts
+│       │   ├── get-deposits.usecase.ts
+│       │   └── update-deposit.usecase.ts    # Valida sensores activos y conflictos de IP
+│       ├── notifications/
+│       │   ├── delete-all-notifications.usecase.ts
+│       │   ├── delete-notification.usecase.ts
+│       │   ├── get-notifications.usecase.ts
+│       │   ├── mark-read.usecase.ts
+│       │   ├── register-token.usecase.ts
+│       │   └── unregister-token.usecase.ts
 │       ├── readings/
-│       │   ├── processReadings.usecase.ts     # Transforma, persiste y emite por WS
-│       │   └── get-readings.usecase.ts
+│       │   ├── export-readings.usecase.ts
+│       │   ├── get-reading-report-stats.usecase.ts
+│       │   ├── get-readings.usecase.ts
+│       │   └── processReadings.usecase.ts     # Transforma, persiste y emite por WS
 │       └── team/
-│           ├── get-team.usecase.ts
-│           ├── invite-member.usecase.ts
-│           ├── update-member.usecase.ts
+│           ├── accept-invitation.usecase.ts
 │           ├── delete-member.usecase.ts
 │           ├── get-invitation.usecase.ts
-│           ├── accept-invitation.usecase.ts
-│           └── reject-invitation.usecase.ts
+│           ├── get-team.usecase.ts
+│           ├── invite-member.usecase.ts
+│           ├── reject-invitation.usecase.ts
+│           └── update-member.usecase.ts
 │
 ├── infrastructure/                  # Capa de Infraestructura (detalles técnicos)
 │   ├── config/
 │   │   ├── connect-db.ts            # Conexión a MongoDB
+│   │   ├── firebase-service-account.json # Credenciales de Firebase Admin SDK
 │   │   └── sensor.config.ts         # Configuración de tópicos y eventos WebSocket
 │   ├── controllers/                 # Controladores de la API REST
 │   │   ├── auth-controller.ts
 │   │   ├── deposit-controller.ts
+│   │   ├── notification-controller.ts
 │   │   ├── reading-controller.ts
 │   │   └── team-controller.ts
 │   ├── database/
 │   │   ├── models/                  # Modelos Mongoose
-│   │   │   ├── user-model.ts
 │   │   │   ├── deposit-model.ts
+│   │   │   ├── notification-model.ts
 │   │   │   ├── reading-model.ts
-│   │   │   ├── alert-model.js
-│   │   │   └── report-model.js
+│   │   │   ├── report-model.js
+│   │   │   └── user-model.ts
 │   │   └── repositories/           # Adaptadores: implementaciones Mongo de los puertos
 │   │       ├── auth-repository.mongo.ts
 │   │       ├── deposit-repository.mongo.ts
+│   │       ├── notification-repository.mongo.ts
 │   │       ├── reading-repository.mongo.ts
 │   │       └── team-repository.mongo.ts
 │   ├── errors/                      # Errores personalizados HTTP
-│   │   ├── CustomError.ts
 │   │   ├── BadRequestError.ts
+│   │   ├── ConflictError.ts
+│   │   ├── CustomError.ts
+│   │   ├── ForbiddenError.ts
 │   │   ├── NotFoundError.ts
-│   │   ├── UnauthorizedError.ts
-│   │   └── ConflictError.ts
+│   │   └── UnauthorizedError.ts
 │   ├── middlewares/
 │   │   ├── auth.ts                  # Validación de tokens JWT
+│   │   ├── authorize.ts             # Control de acceso por roles (propietario, admin, analista)
 │   │   └── errors.ts               # Middleware global de manejo de errores
 │   ├── network/                     # Comunicación en tiempo real
 │   │   ├── broker.ts               # Conexión y suscripción al Broker HiveMQ
-│   │   ├── sensor_listener.ts      # Recibe datos (MQTT) y delega al caso de uso.
-│   │   └── websocket.ts            # Implementación del puerto IRealTimeRepository (Socket.IO).
-│   └── routes/                      # Definición de endpoints
-│       ├── auth-route.ts
-│       ├── deposit-route.ts
-│       ├── reading-route.ts
-│       └── team-route.ts
+│   │   ├── sensor_listener.ts      # Recibe datos (MQTT) y delega al caso de uso
+│   │   └── websocket.ts            # Implementación del puerto IRealTimeRepository (Socket.IO)
+│   ├── routes/                      # Definición de endpoints
+│   │   ├── auth-route.ts
+│   │   ├── deposit-route.ts
+│   │   ├── notification-route.ts
+│   │   ├── reading-route.ts
+│   │   └── team-route.ts
+│   └── services/
+│       └── firebase.service.ts      # Envío de notificaciones push mediante FCM
 │
-├── app.ts                           # Configuración de Express, Socket.IO y rutas
+├── app.ts                           # Configuración de Express, Socket.IO, rate limiting y rutas
 └── server.ts                        # Punto de entrada de la aplicación
 ```
 
@@ -117,7 +143,8 @@ src/
 | `POST` | `/signup` | Registro de nuevo usuario | No |
 | `POST` | `/signin` | Inicio de sesión (retorna JWT) | No |
 | `PUT` | `/restore-password` | Restaurar contraseña | No |
-| `PUT` | `/update-user` | Actualizar datos del usuario | No |
+| `PUT` | `/update-user` | Actualizar datos del usuario | Sí (`x-auth-token`) |
+| `DELETE` | `/delete-user` | Eliminar cuenta del usuario | Sí (`x-auth-token`) |
 
 ### Depósitos (`/api/deposit`)
 
@@ -171,6 +198,15 @@ El caso de uso emite los datos procesados a la app móvil (Flutter) a través de
 | `deposit_turbidity_update` | `ntu` | Turbidez procesada en NTU |
 
 Todos los eventos incluyen el campo `ip` para identificar el depósito de origen.
+
+## Seguridad y Rate Limiting
+
+El servidor implementa medidas de protección mediante `express-rate-limit` y la eliminación de cabeceras sensibles:
+
+- **Desactivación de `X-Powered-By`**: Se elimina la cabecera HTTP para evitar exponer la tecnología del servidor a potenciales atacantes.
+- **Limitación General de Tasa (`/api/deposit`, `/api/reading`, `/api/team`, `/api/notifications`)**: `60 peticiones` por minuto por IP para permitir un uso fluido de la app móvil sin bloquear al usuario en navegación activa.
+- **Limitación Estricta de Autenticación (`/api/auth`)**: `10 peticiones` por 15 minutos por IP para proteger contra ataques de fuerza bruta en inicio de sesión y recuperación de contraseña.
+- **Cálculo Dinámico de Tiempo Restante**: En caso de exceder el límite (HTTP 429), la API retorna un JSON indicando el tiempo exacto estimado en minutos y segundos antes de poder reintentar.
 
 ## Instalación y Ejecución
 
