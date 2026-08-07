@@ -20,6 +20,7 @@ export default class AuthRepositoryMongo implements IAuthRepository {
             password: document.password,
             assigned_deposits: document.assigned_deposits || [],
             fcmTokens: document.fcmTokens || [],
+            global_role: document.global_role || "user",
             createdAt: document.createdAt,
             updatedAt: document.updatedAt
         });

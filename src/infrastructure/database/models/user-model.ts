@@ -8,6 +8,7 @@ export interface IUserDoc extends Document {
     password?: string;
     assigned_deposits?: { role: string; deposit_id: any; status: string }[];
     fcmTokens?: string[];
+    global_role?: "user" | "technician";
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -51,6 +52,11 @@ const UserSchema = new Schema<IUserDoc>({
     fcmTokens: {
         type: [String],
         default: []
+    },
+    global_role: {
+        type: String,
+        enum: ['user', 'technician'],
+        default: 'user'
     }
 }, {
     versionKey: false,

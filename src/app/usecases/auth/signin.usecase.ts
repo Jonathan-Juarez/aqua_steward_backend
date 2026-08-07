@@ -26,6 +26,7 @@ export default class SigninUseCase {
             last_name: user.last_name,
             email: user.email,
             assigned_deposits: user.assigned_deposits,
+            global_role: user.global_role,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };

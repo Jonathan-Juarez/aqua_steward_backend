@@ -8,6 +8,7 @@ export interface IUserDTO {
     password?: string;
     assigned_deposits?: { role: string; deposit_id: string; status?: string }[];
     fcmTokens?: string[];
+    global_role?: "user" | "technician";
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -20,6 +21,7 @@ export default class User {
     password?: string;
     assigned_deposits: { role: string; deposit_id: string; status?: string }[];
     fcmTokens?: string[];
+    global_role: "user" | "technician";
     createdAt?: Date;
     updatedAt?: Date;
 
@@ -33,6 +35,7 @@ export default class User {
         // Si no se asignan depósitos, es un array vacío por defecto.
         this.assigned_deposits = data.assigned_deposits || [];
         this.fcmTokens = data.fcmTokens || [];
+        this.global_role = data.global_role || "user";
         this.createdAt = data.createdAt;
         this.updatedAt = data.updatedAt;
     }

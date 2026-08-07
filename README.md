@@ -92,7 +92,8 @@ src/
 │   │   ├── deposit-controller.ts
 │   │   ├── notification-controller.ts
 │   │   ├── reading-controller.ts
-│   │   └── team-controller.ts
+│   │   ├── team-controller.ts
+│   │   └── tech-controller.ts
 │   ├── database/
 │   │   ├── models/                  # Modelos Mongoose
 │   │   │   ├── deposit-model.ts
@@ -105,7 +106,8 @@ src/
 │   │       ├── deposit-repository.mongo.ts
 │   │       ├── notification-repository.mongo.ts
 │   │       ├── reading-repository.mongo.ts
-│   │       └── team-repository.mongo.ts
+│   │       ├── team-repository.mongo.ts
+│   │       └── tech-repository.mongo.ts
 │   ├── errors/                      # Errores personalizados HTTP
 │   │   ├── BadRequestError.ts
 │   │   ├── ConflictError.ts
@@ -115,7 +117,7 @@ src/
 │   │   └── UnauthorizedError.ts
 │   ├── middlewares/
 │   │   ├── auth.ts                  # Validación de tokens JWT
-│   │   ├── authorize.ts             # Control de acceso por roles (propietario, admin, analista)
+│   │   ├── authorize.ts             # Control de acceso por roles (propietario, admin, analista, técnico)
 │   │   └── errors.ts               # Middleware global de manejo de errores
 │   ├── network/                     # Comunicación en tiempo real
 │   │   ├── broker.ts               # Conexión y suscripción al Broker HiveMQ
@@ -126,7 +128,8 @@ src/
 │   │   ├── deposit-route.ts
 │   │   ├── notification-route.ts
 │   │   ├── reading-route.ts
-│   │   └── team-route.ts
+│   │   ├── team-route.ts
+│   │   └── tech-route.ts
 │   └── services/
 │       └── firebase.service.ts      # Envío de notificaciones push mediante FCM
 │

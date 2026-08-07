@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface INotificationDoc extends Document {
     generation_date: Date;
@@ -13,6 +13,8 @@ export interface INotificationDoc extends Document {
         value: number;
         date: Date;
     };
+    read_by?: Types.ObjectId[];
+    deleted_by?: Types.ObjectId[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -54,6 +56,14 @@ const NotificationSchema = new Schema<INotificationDoc>({
             type: Date,
             default: Date.now
         }
+    },
+    read_by: {
+        type: [{ type: Schema.Types.ObjectId, ref: "User" }],
+        default: []
+    },
+    deleted_by: {
+        type: [{ type: Schema.Types.ObjectId, ref: "User" }],
+        default: []
     }
 }, {
     versionKey: false,

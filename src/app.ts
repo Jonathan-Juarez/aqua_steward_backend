@@ -8,6 +8,7 @@ import depositsRoute from "./infrastructure/routes/deposit-route";
 import readingRoute from "./infrastructure/routes/reading-route";
 import teamRoute from "./infrastructure/routes/team-route";
 import notificationRoute from "./infrastructure/routes/notification-route";
+import techRoute from "./infrastructure/routes/tech-route";
 import { errors } from "./infrastructure/middlewares/errors";
 import { createLimiter } from "./domain/utils/rate_limit";
 
@@ -27,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Limitadores según la sensibilidad del módulo.
 const generalLimiter = createLimiter(1 * 60 * 1000, 60);  // 60 peticiones / 1 min para uso fluido de la app.
-const authLimiter = createLimiter(15 * 60 * 1000, 10);    // 10 peticiones / 15 min para protección de login / claves.
+const authLimiter = createLimiter(15 * 60 * 1000, 20);    // 20 peticiones / 15 min para protección de login / claves.
 
 // Rutas con su respectivo Rate Limiter
 app.use("/api/auth", authLimiter, authRoute);
@@ -35,6 +36,7 @@ app.use("/api/deposit", generalLimiter, depositsRoute);
 app.use("/api/reading", generalLimiter, readingRoute);
 app.use("/api/team", generalLimiter, teamRoute);
 app.use("/api/notifications", generalLimiter, notificationRoute);
+app.use("/api/tech", techRoute); // El ténico puede usar su endpoint sin límite.
 
 // Middleware para manejo de errores globales.
 app.use(errors);

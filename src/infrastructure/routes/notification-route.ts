@@ -3,13 +3,14 @@ import auth from "../middlewares/auth";
 import { NotificationController } from "../controllers/notification-controller";
 
 const router = Router();
+router.use(auth);
 
 // Rutas protegidas por autenticación
-router.post("/register", auth, NotificationController.registerToken);
-router.post("/unregister", auth, NotificationController.unregisterToken);
-router.get("/getNotifications", auth, NotificationController.getNotifications);
-router.delete("/deleteNotification/:id", auth, NotificationController.deleteNotification);
-router.delete("/deleteAllNotifications", auth, NotificationController.deleteAllNotifications);
-router.put("/markAsRead", auth, NotificationController.markNotificationsAsRead);
+router.post("/register", NotificationController.registerToken);
+router.post("/unregister", NotificationController.unregisterToken);
+router.get("/getNotifications", NotificationController.getNotifications);
+router.delete("/deleteNotification/:id", NotificationController.deleteNotification);
+router.delete("/deleteAllNotifications", NotificationController.deleteAllNotifications);
+router.put("/markAsRead", NotificationController.markNotificationsAsRead);
 
 export default router;

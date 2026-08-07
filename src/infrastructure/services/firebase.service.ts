@@ -23,10 +23,8 @@ try {
     console.error("Error al inicializar Firebase Admin SDK:", error.message);
 }
 
-/**
- * Envía una notificación push a una lista de tokens FCM.
- * Proporciona manejo de errores para ignorar y limpiar automáticamente tokens inválidos/viejos de la base de datos.
- */
+
+// Envía una notificación push a una lista de tokens FCM. Proporciona manejo de errores para ignorar y limpiar automáticamente tokens inválidos/viejos de la base de datos.
 export const sendPushNotification = async (
     tokens: string[],
     title: string,

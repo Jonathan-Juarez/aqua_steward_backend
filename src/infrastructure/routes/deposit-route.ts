@@ -4,10 +4,11 @@ import auth from "../middlewares/auth";
 import { requireOwner, requireAdmin } from "../middlewares/authorize";
 
 const router = Router();
+router.use(auth);
 
-router.post("/createDeposit", auth, DepositController.createDeposit);
-router.get("/getDeposits", auth, DepositController.getDeposits);
-router.delete("/deleteDeposit/:id", auth, requireOwner, DepositController.deleteDeposit);
-router.put("/updateDeposit/:id", auth, requireAdmin, DepositController.updateDeposit);
+router.post("/createDeposit", DepositController.createDeposit);
+router.get("/getDeposits", DepositController.getDeposits);
+router.delete("/deleteDeposit/:id", requireOwner, DepositController.deleteDeposit);
+router.put("/updateDeposit/:id", requireAdmin, DepositController.updateDeposit);
 
 export default router;

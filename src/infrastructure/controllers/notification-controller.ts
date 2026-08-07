@@ -8,7 +8,7 @@ import DeleteNotificationUseCase from "../../app/usecases/notifications/delete-n
 import DeleteAllNotificationsUseCase from "../../app/usecases/notifications/delete-all-notifications.usecase";
 import MarkNotificationsAsReadUseCase from "../../app/usecases/notifications/mark-read.usecase";
 
-// Se instancian las dependencias una sola vez
+// Se inicializan el repositorio e instancias de los casos de uso para la gestión de notificaciones.
 const notificationRepository = new NotificationRepositoryMongo();
 const registerTokenUseCase = new RegisterTokenUseCase(notificationRepository);
 const unregisterTokenUseCase = new UnregisterTokenUseCase(notificationRepository);
@@ -34,7 +34,7 @@ export class NotificationController {
     }
 
     static async deleteNotification(req: AuthRequest, res: Response) {
-        await deleteNotificationUseCase.execute(req.params.id as string);
+        await deleteNotificationUseCase.execute(req.user.id, req.params.id as string);
         return res.status(200).json({});
     }
 

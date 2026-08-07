@@ -3,7 +3,7 @@ import { INotificationRepository } from "../../../domain/repository/notification
 export default class DeleteNotificationUseCase {
     constructor(private notificationRepository: INotificationRepository) { }
 
-    async execute(notificationId: string): Promise<void> {
-        await this.notificationRepository.deleteNotification(notificationId);
+    async execute(userId: string, notificationId: string): Promise<void> {
+        await this.notificationRepository.deleteNotification(userId, notificationId);
     }
 }
