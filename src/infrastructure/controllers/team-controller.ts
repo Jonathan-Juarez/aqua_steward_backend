@@ -68,4 +68,11 @@ export class TeamController {
         const invitations = await getInvitationUseCase.execute({ user_id: userId });
         res.status(200).json(invitations);
     }
+
+    static async leaveDeposit(req: AuthRequest, res: Response) {
+        const { depositId } = req.params;
+        const userId = req.user.id;
+        const deletedMember = await deleteMemberUseCase.execute({ deposit_id: depositId.toString(), user_id: userId.toString() });
+        res.status(200).json(deletedMember);
+    }
 }

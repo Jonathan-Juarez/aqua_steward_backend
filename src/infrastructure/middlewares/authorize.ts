@@ -35,7 +35,7 @@ export const authorizeRole = (allowedRoles: string[]) => {
             );
 
             if (!assignment || !allowedRoles.includes(assignment.role)) {
-                throw new ForbiddenError("No tienes permisos para realizar esta acción.");
+                throw new ForbiddenError();
             }
 
             next();

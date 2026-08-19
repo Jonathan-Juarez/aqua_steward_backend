@@ -13,5 +13,6 @@ router.put("/:depositId/members/:userId", requireAdmin, TeamController.updateMem
 router.delete("/:depositId/members/:userId", requireAdmin, TeamController.deleteMember);
 router.put("/:depositId/accept", TeamController.acceptInvitation);
 router.delete("/:depositId/reject", TeamController.rejectInvitation);
+router.delete("/:depositId/leave", TeamController.leaveDeposit);
 
 export default router;
