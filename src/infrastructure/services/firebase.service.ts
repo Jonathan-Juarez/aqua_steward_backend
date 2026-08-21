@@ -6,7 +6,7 @@ import UserModel from "../database/models/user-model";
 
 let isFirebaseInitialized = false;
 
-const keyPath = path.join(__dirname, "../config/firebase-service-account.json");
+const keyPath = path.join(process.cwd(), "firebase-service-account.json");
 
 try {
     if (fs.existsSync(keyPath)) {
@@ -17,7 +17,7 @@ try {
         isFirebaseInitialized = true;
         console.log("Firebase Admin SDK inicializado exitosamente.");
     } else {
-        console.warn("ADVERTENCIA: firebase-service-account.json no encontrado en src/infrastructure/config/. Las notificaciones push están desactivadas temporalmente.");
+        console.warn("ADVERTENCIA: firebase-service-account.json no encontrado. Las notificaciones push están desactivadas temporalmente.");
     }
 } catch (error: any) {
     console.error("Error al inicializar Firebase Admin SDK:", error.message);
