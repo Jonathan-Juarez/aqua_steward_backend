@@ -253,4 +253,28 @@ Asegúrate de tener **Node.js** y **npm** instalados.
 |-|-|
 | `npm run dev` | Inicia el servidor en modo desarrollo con auto-recarga (nodemon + ts-node) |
 | `npm run build` | Compila los módulos TypeScript a la carpeta `/dist` |
+| `npm run build:production` | Limpia, compila y comprueba el build que se subirá a CapRover |
 | `npm run start` | Inicia el servidor de producción desde `/dist/server.js` |
+
+### Despliegue en CapRover
+
+Antes de subir el proyecto, instala las dependencias y genera el build:
+
+```bash
+npm install
+npm run build:production
+```
+
+El segundo comando elimina cualquier build anterior, compila TypeScript y
+comprueba que exista `dist/server.js`. Sube el proyecto completo a CapRover,
+incluida la carpeta `dist`. Si despliegas desde Git, agrega y confirma también
+esa carpeta antes de hacer el despliegue.
+
+En **App Configs** de CapRover configura:
+
+- **Environmental Variables:** las mismas variables documentadas para `.env`,
+  incluida `FIREBASE_SERVICE_ACCOUNT_JSON`.
+
+El servidor utiliza automáticamente el valor de `PORT` proporcionado por
+CapRover. Si esa variable no existe o no contiene un puerto válido, utiliza
+`3000`. El **Container HTTP Port** de CapRover debe coincidir con ese valor.
