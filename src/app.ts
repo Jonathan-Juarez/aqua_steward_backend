@@ -25,6 +25,11 @@ app.disable("x-powered-by");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Endpoint liviano para verificar desde CapRover que el contenedor está activo.
+app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+});
+
 
 // Limitadores según la sensibilidad del módulo.
 const generalLimiter = createLimiter(1 * 60 * 1000, 60);  // 60 peticiones / 1 min para uso fluido de la app.

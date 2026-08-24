@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const connectDB = async (): Promise<void> => {
     try {

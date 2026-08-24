@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMqttClient = exports.mqttEvents = exports.initMQTT = void 0;
+exports.disconnectMQTT = exports.getMqttClient = exports.mqttEvents = exports.initMQTT = void 0;
 const mqtt = __importStar(require("mqtt"));
 const events_1 = require("events");
 // Se crea un EventEmitter para manejar los eventos MQTT.
@@ -44,28 +44,43 @@ exports.mqttEvents = mqttEvents;
 // Se declara client aquí arriba para poder exportarlo.
 let client;
 const initMQTT = () => {
-    client = mqtt.connect(process.env.MQTT_CLUSTER_URL, {
+    const mqttClient = mqtt.connect(process.env.MQTT_CLUSTER_URL, {
         port: Number(process.env.MQTT_PORT),
         username: process.env.MQTT_USERNAME,
         password: process.env.MQTT_PASSWORD,
         // Se genera un ID único para cada cliente. El toString(16) se usa para convertir el número a hexadecimal. El substr(2, 8) empezando a contar desde el segundo carácter y tomando 8 caracteres. 
         clientId: "Aqua_Server_" + Math.random().toString(16).substr(2, 8)
     });
-    client.on("connect", () => {
+    client = mqttClient;
+    mqttClient.on("connect", () => {
         console.log("Broker MQTT Conectado");
-        client.subscribe("aquasteward/#", (error) => {
+        mqttClient.subscribe("aquasteward/#", (error) => {
             if (!error)
                 console.log("Escuchando tráfico en: aquasteward/#");
         });
     });
-    client.on("message", (topic, message) => {
+    mqttClient.on("message", (topic, message) => {
         mqttEvents.emit("message_received", { topic, message });
     });
-    client.on("error", (error) => {
+    mqttClient.on("error", (error) => {
         console.error("Error MQTT:", error.message);
     });
 };
 exports.initMQTT = initMQTT;
-// Se modifica el export para que retorne también una función que nos devuelva el client actual
-const getMqttClient = () => client;
+// Retorna el cliente MQTT una vez que fue inicializado.
+const getMqttClient = () => {
+    if (!client) {
+        throw new Error("El cliente MQTT todavía no está inicializado.");
+    }
+    return client;
+};
 exports.getMqttClient = getMqttClient;
+// Cierra limpiamente la conexión cuando CapRover reemplaza el contenedor.
+const disconnectMQTT = async () => {
+    if (!client)
+        return;
+    await client.endAsync();
+    client = undefined;
+    console.log("Broker MQTT desconectado correctamente.");
+};
+exports.disconnectMQTT = disconnectMQTT;

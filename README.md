@@ -272,9 +272,16 @@ esa carpeta antes de hacer el despliegue.
 
 En **App Configs** de CapRover configura:
 
-- **Environmental Variables:** las mismas variables documentadas para `.env`,
-  incluida `FIREBASE_SERVICE_ACCOUNT_JSON`.
+- **Container HTTP Port:** `80` (valor predeterminado de la plantilla Node).
+- **Environmental Variables:** las variables documentadas para `.env`, incluida
+  `FIREBASE_SERVICE_ACCOUNT_JSON`, pero **no agregues `PORT=3000`**. El puerto
+  `3000` es únicamente para desarrollo local.
 
 El servidor utiliza automáticamente el valor de `PORT` proporcionado por
-CapRover. Si esa variable no existe o no contiene un puerto válido, utiliza
-`3000`. El **Container HTTP Port** de CapRover debe coincidir con ese valor.
+la plantilla de CapRover (`80`). Si la variable no existe o no contiene un
+puerto válido, utiliza `3000` como respaldo para desarrollo local.
+
+Después del despliegue puedes comprobar que la API está activa visitando
+`https://<tu-dominio>/health`. Debe responder `{"status":"ok"}`. Durante un
+nuevo despliegue, CapRover envía `SIGTERM` al contenedor anterior; el servidor
+cierra HTTP, MQTT y MongoDB de forma controlada antes de finalizar.
