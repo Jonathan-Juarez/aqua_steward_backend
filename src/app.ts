@@ -25,6 +25,14 @@ app.disable("x-powered-by");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Respuesta básica al abrir directamente el dominio del backend.
+app.get("/", (_req, res) => {
+    res.status(200).json({
+        service: "AquaSteward Backend",
+        status: "ok"
+    });
+});
+
 // Endpoint liviano para verificar desde CapRover que el contenedor está activo.
 app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });

@@ -228,7 +228,6 @@ Asegúrate de tener **Node.js** y **npm** instalados.
 3.  Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
     ```env
     MONGO_URI=mongodb://localhost:27017/aqua_steward
-    PORT=3000
 
     JWT_SECRET=<tu_secreto_jwt>
 
@@ -274,12 +273,12 @@ En **App Configs** de CapRover configura:
 
 - **Container HTTP Port:** `80` (valor predeterminado de la plantilla Node).
 - **Environmental Variables:** las variables documentadas para `.env`, incluida
-  `FIREBASE_SERVICE_ACCOUNT_JSON`, pero **no agregues `PORT=3000`**. El puerto
-  `3000` es únicamente para desarrollo local.
+  `FIREBASE_SERVICE_ACCOUNT_JSON`. No agregues manualmente una variable `PORT`;
+  deja que CapRover proporcione el puerto de la aplicación.
 
 El servidor utiliza automáticamente el valor de `PORT` proporcionado por
 la plantilla de CapRover (`80`). Si la variable no existe o no contiene un
-puerto válido, utiliza `3000` como respaldo para desarrollo local.
+puerto válido, utiliza `80` para que coincida con el proxy interno de CapRover.
 
 Después del despliegue puedes comprobar que la API está activa visitando
 `https://<tu-dominio>/health`. Debe responder `{"status":"ok"}`. Durante un

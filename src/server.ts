@@ -10,7 +10,7 @@ import sensorListener from "./infrastructure/network/sensor_listener";
 const configuredPort = Number(process.env.PORT);
 const port = Number.isInteger(configuredPort) && configuredPort > 0
     ? configuredPort
-    : 3000;
+    : 80;
 
 // Iniciar Servidor
 server.listen(port, "0.0.0.0", async () => {

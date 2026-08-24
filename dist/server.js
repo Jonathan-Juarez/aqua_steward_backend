@@ -13,7 +13,7 @@ const sensor_listener_1 = __importDefault(require("./infrastructure/network/sens
 const configuredPort = Number(process.env.PORT);
 const port = Number.isInteger(configuredPort) && configuredPort > 0
     ? configuredPort
-    : 3000;
+    : 80;
 // Iniciar Servidor
 app_1.server.listen(port, "0.0.0.0", async () => {
     await (0, connect_db_1.default)();
