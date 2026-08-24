@@ -85,7 +85,6 @@ src/
 ├── infrastructure/                  # Capa de Infraestructura (detalles técnicos)
 │   ├── config/
 │   │   ├── connect-db.ts            # Conexión a MongoDB
-│   │   ├── firebase-service-account.json # Credenciales de Firebase Admin SDK
 │   │   └── sensor.config.ts         # Configuración de tópicos y eventos WebSocket
 │   ├── controllers/                 # Controladores de la API REST
 │   │   ├── auth-controller.ts
@@ -233,12 +232,20 @@ Asegúrate de tener **Node.js** y **npm** instalados.
 
     JWT_SECRET=<tu_secreto_jwt>
 
+    # Service Account de Firebase en una sola línea de JSON
+    FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"<tu_project_id>","private_key_id":"<tu_private_key_id>","private_key":"-----BEGIN PRIVATE KEY-----\n<tu_clave_privada>\n-----END PRIVATE KEY-----\n","client_email":"<tu_client_email>"}
+
     # Credenciales HiveMQ
     MQTT_PORT=8883
     MQTT_USERNAME=<usuario_mqtt>
     MQTT_PASSWORD=<contraseña_mqtt>
     MQTT_CLUSTER_URL=mqtts://<tu_cluster>.hivemq.cloud
     ```
+
+    No guardes `firebase-service-account.json` en el proyecto. En producción,
+    configura `FIREBASE_SERVICE_ACCOUNT_JSON` directamente en CapRover, Docker,
+    Render, Railway o el proveedor utilizado, conservando el JSON completo en
+    una sola línea.
 
 ### Comandos Disponibles
 
