@@ -64,7 +64,7 @@ class ProcessReadingsUseCase {
         // Se persiste la lectura en el bucket correspondiente.
         await this.readingRepository.saveBucket(reading);
         // Se emite el evento al cliente WebSocket a través de nuestro gateway (puerto de salida)
-        this.realTimeGateway.emitDepositUpdate(dto.deviceIp, dto.topicKey, processedValue);
+        this.realTimeGateway.emitDepositUpdate(deposit.id, dto.deviceIp, dto.topicKey, processedValue);
         // Lógica de Detección de Umbrales y Alerta
         if (sensor) {
             const evaluation = (0, threshold_utils_1.evaluateThreshold)(processedValue, sensor.min_value, sensor.max_value, deposit.name, sensor.unit || "");

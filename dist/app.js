@@ -19,8 +19,37 @@ const rate_limit_1 = require("./domain/utils/rate_limit");
 // Crear instancia de express, servidor HTTP y servidor de Socket.IO.
 exports.app = (0, express_1.default)();
 exports.server = http_1.default.createServer(exports.app);
-// cors permite la comunicación entre backend y frontend. * permite la conexión desde cualquier origen (por el momento). 
-exports.io = new socket_io_1.Server(exports.server, { cors: { origin: "*" } });
+// Socket.IO acepta polling y WebSocket. CapRover debe tener habilitada la
+// opción "Websocket Support" para permitir la actualización a wss://.
+exports.io = new socket_io_1.Server(exports.server, {
+    path: "/socket.io",
+    transports: ["polling", "websocket"],
+    allowEIO3: true,
+    pingInterval: 25_000,
+    pingTimeout: 20_000,
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+exports.io.on("connection", (socket) => {
+    console.log(`[Socket.IO] Cliente conectado: ${socket.id} ` +
+        `(transporte: ${socket.conn.transport.name}, total: ${exports.io.engine.clientsCount})`);
+    socket.conn.on("upgrade", (transport) => {
+        console.log(`[Socket.IO] ${socket.id} actualizado a ${transport.name}.`);
+    });
+    socket.on("disconnect", (reason) => {
+        console.log(`[Socket.IO] Cliente desconectado: ${socket.id} ` +
+            `(motivo: ${reason}, total: ${exports.io.engine.clientsCount})`);
+    });
+    socket.emit("realtime_ready", {
+        status: "connected",
+        socketId: socket.id
+    });
+});
+exports.io.engine.on("connection_error", (error) => {
+    console.error(`[Socket.IO] Error de conexión (${error.code}): ${error.message}`);
+});
 // Desactivar cabecera X-Powered-By para evitar exploits al indicar el framework usado en las respuestas.
 exports.app.disable("x-powered-by");
 // Middlewares
@@ -35,7 +64,13 @@ exports.app.get("/", (_req, res) => {
 });
 // Endpoint liviano para verificar desde CapRover que el contenedor está activo.
 exports.app.get("/health", (_req, res) => {
-    res.status(200).json({ status: "ok" });
+    res.status(200).json({
+        status: "ok",
+        realtime: {
+            path: "/socket.io",
+            connectedClients: exports.io.engine.clientsCount
+        }
+    });
 });
 // Limitadores según la sensibilidad del módulo.
 const generalLimiter = (0, rate_limit_1.createLimiter)(1 * 60 * 1000, 60); // 60 peticiones / 1 min para uso fluido de la app.

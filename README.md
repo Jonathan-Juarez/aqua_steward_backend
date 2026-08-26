@@ -200,6 +200,14 @@ El caso de uso emite los datos procesados a la app móvil (Flutter) a través de
 | `deposit_turbidity_update` | `ntu` | Turbidez procesada en NTU |
 
 Todos los eventos incluyen el campo `ip` para identificar el depósito de origen.
+También incluyen `depositId`, `sensor`, `value` y `timestamp`; se conserva la
+clave específica (`litros`, `ph` o `ntu`) para compatibilidad con clientes
+existentes. Al conectarse, el servidor emite `realtime_ready` con el ID del
+socket.
+
+En CapRover debe estar activada la opción **Enable Websocket Support** en la
+sección **HTTP Settings**. El endpoint `/health` muestra en
+`realtime.connectedClients` cuántos clientes Socket.IO están enlazados.
 
 ## Seguridad y Rate Limiting
 
@@ -253,6 +261,7 @@ Asegúrate de tener **Node.js** y **npm** instalados.
 | `npm run dev` | Inicia el servidor en modo desarrollo con auto-recarga (nodemon + ts-node) |
 | `npm run build` | Compila los módulos TypeScript a la carpeta `/dist` |
 | `npm run build:production` | Limpia, compila y comprueba el build que se subirá a CapRover |
+| `npm run test:realtime` | Verifica localmente los handshakes polling y WebSocket de Socket.IO |
 | `npm run start` | Inicia el servidor de producción desde `/dist/server.js` |
 
 ### Despliegue en CapRover
@@ -271,14 +280,16 @@ esa carpeta antes de hacer el despliegue.
 
 En **App Configs** de CapRover configura:
 
-- **Container HTTP Port:** `80` (valor predeterminado de la plantilla Node).
+- **Container HTTP Port:** `3000` (puerto asignado por la plantilla Node usada
+  por este proyecto).
 - **Environmental Variables:** las variables documentadas para `.env`, incluida
   `FIREBASE_SERVICE_ACCOUNT_JSON`. No agregues manualmente una variable `PORT`;
   deja que CapRover proporcione el puerto de la aplicación.
 
-El servidor utiliza automáticamente el valor de `PORT` proporcionado por
-la plantilla de CapRover (`80`). Si la variable no existe o no contiene un
-puerto válido, utiliza `80` para que coincida con el proxy interno de CapRover.
+El servidor utiliza automáticamente el valor de `PORT` proporcionado por la
+plantilla de CapRover. En el despliegue actual la plantilla asigna `3000`, por
+lo que **Container HTTP Port** también debe ser `3000`. Si la plataforma no
+proporciona un valor válido, el código conserva `80` únicamente como respaldo.
 
 Después del despliegue puedes comprobar que la API está activa visitando
 `https://<tu-dominio>/health`. Debe responder `{"status":"ok"}`. Durante un
