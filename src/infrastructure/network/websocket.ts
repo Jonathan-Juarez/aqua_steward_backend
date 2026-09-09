@@ -15,6 +15,7 @@ export default class WebSocketGateway implements IRealTimeRepository {
         // Se emite el evento al cliente.
         this.io.emit(config.wsEvent, {
             ip: deviceIp,
+            device_id: deviceIp,
             [config.wsKey]: processedValue
         });
     }

@@ -55,8 +55,10 @@ export default class Deposit {
 
 
     validate(): void {
-        const ipRegex = /^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.)){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$/;
-        if (!this.ip || !ipRegex.test(this.ip)) throw new BadRequestError("IP inválida");
+        const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$/;
+        if (!this.ip || !macRegex.test(this.ip)) {
+            throw new BadRequestError("Dirección MAC inválida");
+        }
 
         if (this.capacity == null || this.capacity < 0) throw new BadRequestError("La capacidad debe ser un número positivo.");
         if (this.installation_height == null || this.installation_height < 0) throw new BadRequestError("La altura de instalación debe ser un número positivo.");
