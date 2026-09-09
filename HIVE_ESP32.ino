@@ -1,10 +1,11 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
+#include <ESPmDNS.h>
 
 // --- Credenciales y Configuración ---
-const char* ssid = "Ptr Juarez_EXT";
-const char* password = "930939Juarez";
+const char* ssid = "ULV-ESTUDIANTES";
+const char* password = "3STUDI4NT3S";
 
 const char* mqtt_server = "8ec97f4f3bc645adbf9cc4d7dfa81a6a.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
@@ -138,6 +139,20 @@ void setup() {
   Serial.begin(115200);
   setup_wifi();
 
+  // mDNS: Anuncia el kit con su MAC incrustada en el hostname.
+  // El hostname queda como: aquasteward-A4CF1289B012.local
+  String mac = WiFi.macAddress();
+  String macClean = mac;
+  macClean.replace(":", "");
+  String hostname = "aquasteward-" + macClean;
+  hostname.toLowerCase();
+  if (MDNS.begin(hostname.c_str())) {
+    MDNS.addService("aquasteward", "tcp", 80);
+    Serial.print("mDNS iniciado: ");
+    Serial.print(hostname);
+    Serial.println(".local");
+  }
+
   // Configuración de certificado seguro.
   espClient.setCACert(root_ca);
   client.setServer(mqtt_server, mqtt_port);
@@ -152,12 +167,12 @@ void loop() {
 
   unsigned long now = millis();
 
-  if (now - lastMsg > 10000) {  
+  if (now - lastMsg > 10000) {
     lastMsg = now;
 
-    String ip = WiFi.localIP().toString();
-    // Tópico dinámico (aquasteward/IP/[sensor]) para el backend.
-    String topicBase = "aquasteward/" + ip;
+    String mac = WiFi.macAddress();
+    // Tópico permanente por hardware (aquasteward/MAC/[sensor]) para el backend.
+    String topicBase = "aquasteward/" + mac;
 
     // Publicación de distancia.
     float distance = readDistance();
@@ -172,8 +187,8 @@ void loop() {
       Serial.print(distance);
       Serial.println(" cm");
 
-    //       Serial.println("Publicando:");
-    // Serial.println(topicDistancia);
+      //       Serial.println("Publicando:");
+      // Serial.println(topicDistancia);
     }
     // Publicación de turbidez (ADC crudo promedio).
     float adcTurbidez = leerADCPromedio(turbidezPin);
@@ -189,9 +204,5 @@ void loop() {
     client.publish(topicPH.c_str(), String(adcPH, 2).c_str(), false);
     Serial.print("ADC pH: ");
     Serial.println(adcPH, 2);
-
-
-    
   }
 }
-
