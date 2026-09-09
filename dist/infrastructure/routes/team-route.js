@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const team_controller_1 = require("../controllers/team-controller");
+const auth_1 = __importDefault(require("../middlewares/auth"));
+const authorize_1 = require("../middlewares/authorize");
+const router = (0, express_1.Router)();
+router.use(auth_1.default);
+router.get("/invitations", team_controller_1.TeamController.getInvitations);
+router.get("/:depositId", team_controller_1.TeamController.getTeam);
+router.post("/:depositId/invite", authorize_1.requireAdmin, team_controller_1.TeamController.inviteMember);
+router.put("/:depositId/members/:userId", authorize_1.requireAdmin, team_controller_1.TeamController.updateMember);
+router.delete("/:depositId/members/:userId", authorize_1.requireAdmin, team_controller_1.TeamController.deleteMember);
+router.put("/:depositId/accept", team_controller_1.TeamController.acceptInvitation);
+router.delete("/:depositId/reject", team_controller_1.TeamController.rejectInvitation);
+router.delete("/:depositId/leave", team_controller_1.TeamController.leaveDeposit);
+exports.default = router;

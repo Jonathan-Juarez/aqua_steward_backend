@@ -1,26 +1,34 @@
-import { initializeApp, cert } from "firebase-admin/app";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
-import * as fs from "fs";
-import * as path from "path";
 import UserModel from "../database/models/user-model";
 
 let isFirebaseInitialized = false;
 
-const keyPath = path.join(process.cwd(), "firebase-service-account.json");
-
 try {
-    if (fs.existsSync(keyPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf8"));
-        initializeApp({
-            credential: cert(serviceAccount)
-        });
-        isFirebaseInitialized = true;
-        console.log("Firebase Admin SDK inicializado exitosamente.");
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+
+    if (!serviceAccountJson) {
+        console.warn(
+            "ADVERTENCIA: FIREBASE_SERVICE_ACCOUNT_JSON no está definida. " +
+            "Las notificaciones push están desactivadas temporalmente."
+        );
     } else {
-        console.warn("ADVERTENCIA: firebase-service-account.json no encontrado. Las notificaciones push están desactivadas temporalmente.");
+        const serviceAccount = JSON.parse(serviceAccountJson);
+
+        if (getApps().length === 0) {
+            initializeApp({
+                credential: cert(serviceAccount)
+            });
+        }
+
+        isFirebaseInitialized = true;
+        console.log("Firebase Admin SDK inicializado exitosamente desde variable de entorno.");
     }
 } catch (error: any) {
-    console.error("Error al inicializar Firebase Admin SDK:", error.message);
+    console.error(
+        "Error leyendo FIREBASE_SERVICE_ACCOUNT_JSON o inicializando Firebase Admin SDK:",
+        error.message
+    );
 }
 
 

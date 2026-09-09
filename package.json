@@ -5,6 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
+    "build:production": "node scripts/build-production.js",
+    "test:realtime": "npm run build && node scripts/test-realtime.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts"

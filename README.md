@@ -85,7 +85,6 @@ src/
 ├── infrastructure/                  # Capa de Infraestructura (detalles técnicos)
 │   ├── config/
 │   │   ├── connect-db.ts            # Conexión a MongoDB
-│   │   ├── firebase-service-account.json # Credenciales de Firebase Admin SDK
 │   │   └── sensor.config.ts         # Configuración de tópicos y eventos WebSocket
 │   ├── controllers/                 # Controladores de la API REST
 │   │   ├── auth-controller.ts
@@ -201,6 +200,14 @@ El caso de uso emite los datos procesados a la app móvil (Flutter) a través de
 | `deposit_turbidity_update` | `ntu` | Turbidez procesada en NTU |
 
 Todos los eventos incluyen el campo `ip` para identificar el depósito de origen.
+También incluyen `depositId`, `sensor`, `value` y `timestamp`; se conserva la
+clave específica (`litros`, `ph` o `ntu`) para compatibilidad con clientes
+existentes. Al conectarse, el servidor emite `realtime_ready` con el ID del
+socket.
+
+En CapRover debe estar activada la opción **Enable Websocket Support** en la
+sección **HTTP Settings**. El endpoint `/health` muestra en
+`realtime.connectedClients` cuántos clientes Socket.IO están enlazados.
 
 ## Seguridad y Rate Limiting
 
@@ -229,9 +236,11 @@ Asegúrate de tener **Node.js** y **npm** instalados.
 3.  Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
     ```env
     MONGO_URI=mongodb://localhost:27017/aqua_steward
-    PORT=3000
 
     JWT_SECRET=<tu_secreto_jwt>
+
+    # Service Account de Firebase en una sola línea de JSON
+    FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"<tu_project_id>","private_key_id":"<tu_private_key_id>","private_key":"-----BEGIN PRIVATE KEY-----\n<tu_clave_privada>\n-----END PRIVATE KEY-----\n","client_email":"<tu_client_email>"}
 
     # Credenciales HiveMQ
     MQTT_PORT=8883
@@ -240,10 +249,49 @@ Asegúrate de tener **Node.js** y **npm** instalados.
     MQTT_CLUSTER_URL=mqtts://<tu_cluster>.hivemq.cloud
     ```
 
+    No guardes `firebase-service-account.json` en el proyecto. En producción,
+    configura `FIREBASE_SERVICE_ACCOUNT_JSON` directamente en CapRover, Docker,
+    Render, Railway o el proveedor utilizado, conservando el JSON completo en
+    una sola línea.
+
 ### Comandos Disponibles
 
 | Comando | Descripción |
 |-|-|
 | `npm run dev` | Inicia el servidor en modo desarrollo con auto-recarga (nodemon + ts-node) |
 | `npm run build` | Compila los módulos TypeScript a la carpeta `/dist` |
+| `npm run build:production` | Limpia, compila y comprueba el build que se subirá a CapRover |
+| `npm run test:realtime` | Verifica localmente los handshakes polling y WebSocket de Socket.IO |
 | `npm run start` | Inicia el servidor de producción desde `/dist/server.js` |
+
+### Despliegue en CapRover
+
+Antes de subir el proyecto, instala las dependencias y genera el build:
+
+```bash
+npm install
+npm run build:production
+```
+
+El segundo comando elimina cualquier build anterior, compila TypeScript y
+comprueba que exista `dist/server.js`. Sube el proyecto completo a CapRover,
+incluida la carpeta `dist`. Si despliegas desde Git, agrega y confirma también
+esa carpeta antes de hacer el despliegue.
+
+En **App Configs** de CapRover configura:
+
+- **Container HTTP Port:** `3000` (puerto asignado por la plantilla Node usada
+  por este proyecto).
+- **Environmental Variables:** las variables documentadas para `.env`, incluida
+  `FIREBASE_SERVICE_ACCOUNT_JSON`. No agregues manualmente una variable `PORT`;
+  deja que CapRover proporcione el puerto de la aplicación.
+
+El servidor utiliza automáticamente el valor de `PORT` proporcionado por la
+plantilla de CapRover. En el despliegue actual la plantilla asigna `3000`, por
+lo que **Container HTTP Port** también debe ser `3000`. Si la plataforma no
+proporciona un valor válido, el código conserva `80` únicamente como respaldo.
+
+Después del despliegue puedes comprobar que la API está activa visitando
+`https://<tu-dominio>/health`. Debe responder `{"status":"ok"}`. Durante un
+nuevo despliegue, CapRover envía `SIGTERM` al contenedor anterior; el servidor
+cierra HTTP, MQTT y MongoDB de forma controlada antes de finalizar.
