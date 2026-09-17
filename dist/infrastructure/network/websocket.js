@@ -26,6 +26,7 @@ class WebSocketGateway {
         this.io.emit(config.wsEvent, {
             depositId,
             ip: deviceIp,
+            device_id: deviceIp,
             sensor: topicKey,
             value: processedValue,
             [config.wsKey]: processedValue,
