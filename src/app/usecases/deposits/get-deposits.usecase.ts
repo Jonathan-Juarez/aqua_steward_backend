@@ -1,7 +1,6 @@
 import { DepositResponseDTO } from "../../dtos/deposit.dto";
 import { IAuthRepository } from "../../../domain/repository/auth-repository.interface";
 import { IDepositRepository } from "../../../domain/repository/deposit-repository.interface";
-import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export default class GetDepositsUseCase {

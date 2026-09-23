@@ -40,9 +40,9 @@ export default class ProcessReadingsUseCase {
         const sensorType = TOPIC_TO_SENSOR[dto.topicKey];
         if (!sensorType) throw new Error(`Tópico desconocido: ${dto.topicKey}`);
 
-        // Se busca el depósito asociado a la IP del dispositivo.
+        // Se busca el depósito asociado a la dirección MAC del dispositivo.
         const deposit = await this.depositRepository.findByIp(dto.deviceIp);
-        if (!deposit) throw new Error(`IP desconocida: ${dto.deviceIp}`);
+        if (!deposit) throw new Error(`Dirección MAC desconocida: ${dto.deviceIp}`);
 
         // Se verifica que el sensor esté activo en el depósito.
         if (!deposit.isSensorActive(sensorType)) {

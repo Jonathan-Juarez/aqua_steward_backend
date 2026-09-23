@@ -23,7 +23,7 @@ export default class CreateDepositUseCase {
 
         const existingDeposit = await this.depositRepository.findByIp(newDeposit.ip!);
         if (existingDeposit) {
-            throw new ConflictError("La IP ya existe en un depósito");
+            throw new ConflictError("La dirección MAC ya existe en un depósito");
         }
 
         const savedDeposit = await this.depositRepository.save(newDeposit);
