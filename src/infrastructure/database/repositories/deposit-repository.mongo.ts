@@ -8,13 +8,15 @@ export default class DepositRepositoryMongo implements IDepositRepository {
         if (!document) return null;
 
         return new Deposit({
-            id: document._id.toString(),
+            id: document._id?.toString(),
             name: document.name,
             ip: document.ip,
             capacity: document.capacity,
             installation_height: document.installation_height,
             fill_gap: document.fill_gap,
-            owner_id: document.owner_id.toString(),
+            latitude: document.latitude,
+            longitude: document.longitude,
+            owner_id: document.owner_id?.toString(),
             sensors: document.sensors,
             createdAt: document.createdAt,
             updatedAt: document.updatedAt
@@ -38,6 +40,8 @@ export default class DepositRepositoryMongo implements IDepositRepository {
             capacity: depositEntity.capacity,
             installation_height: depositEntity.installation_height,
             fill_gap: depositEntity.fill_gap,
+            latitude: depositEntity.latitude,
+            longitude: depositEntity.longitude,
             owner_id: depositEntity.owner_id,
             sensors: depositEntity.sensors
         };

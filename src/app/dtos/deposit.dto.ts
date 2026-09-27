@@ -14,6 +14,8 @@ export interface ICreateDepositDTO {
     capacity: number;
     installation_height: number;
     fill_gap: number;
+    latitude: number;
+    longitude: number;
     owner_id: string; // Puede ser un string que luego se convierte a ObjectId
     sensors: ISensorDTO[];
 }
@@ -27,6 +29,8 @@ export interface DepositResponseDTO {
     capacity?: number;
     installation_height?: number;
     fill_gap?: number;
+    latitude?: number;
+    longitude?: number;
     owner_id?: string;
     sensors: any[];
     role: string;

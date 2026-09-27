@@ -15,6 +15,8 @@ export default class CreateDepositUseCase {
             capacity: dto.capacity,
             installation_height: dto.installation_height,
             fill_gap: dto.fill_gap,
+            latitude: dto.latitude,
+            longitude: dto.longitude,
             owner_id: dto.owner_id,
             sensors: dto.sensors
         });

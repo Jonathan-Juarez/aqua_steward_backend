@@ -16,6 +16,8 @@ export interface IDepositsDoc extends Document {
     capacity: number;
     installation_height: number;
     fill_gap: number;
+    latitude: number;
+    longitude: number;
     owner_id: Schema.Types.ObjectId;
     sensors: ISensorDoc[];
     createdAt: Date;
@@ -42,6 +44,14 @@ const DepositsSchema = new Schema<IDepositsDoc>({
         required: true
     },
     fill_gap: {
+        type: Number,
+        required: true
+    },
+    latitude: {
+        type: Number,
+        required: true
+    },
+    longitude: {
         type: Number,
         required: true
     },

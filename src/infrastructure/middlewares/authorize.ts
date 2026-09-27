@@ -25,7 +25,7 @@ export const authorizeRole = (allowedRoles: string[]) => {
 
             // Verificación del creador directo del depósito
             const deposit = await DepositsModel.findById(depositId);
-            if (deposit && deposit.owner_id.toString() === userId.toString()) {
+            if (deposit && deposit.owner_id?.toString() === userId.toString()) {
                 return next();
             }
 

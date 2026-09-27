@@ -19,6 +19,8 @@ export interface DepositData {
     capacity?: number;
     installation_height?: number;
     fill_gap?: number;
+    latitude?: number;
+    longitude?: number;
     owner_id?: string;
     sensors?: SensorData[];
     createdAt?: Date;
@@ -32,6 +34,8 @@ export default class Deposit {
     capacity?: number;
     installation_height?: number;
     fill_gap?: number;
+    latitude?: number;
+    longitude?: number;
     owner_id?: string;
     sensors: SensorData[];
     createdAt?: Date;
@@ -44,6 +48,8 @@ export default class Deposit {
         this.capacity = data.capacity;
         this.installation_height = data.installation_height;
         this.fill_gap = data.fill_gap;
+        this.latitude = data.latitude;
+        this.longitude = data.longitude;
         this.owner_id = data.owner_id;
         // Array de sensores con los valores enviados por el usuario, si no se envían se inicializa vacío.
         this.sensors = data.sensors || [];
@@ -59,6 +65,9 @@ export default class Deposit {
         if (!this.ip || !macRegex.test(this.ip)) {
             throw new BadRequestError("Dirección MAC inválida");
         }
+
+        if (this.latitude == null || this.latitude < -90 || this.latitude > 90) throw new BadRequestError("Ubicación del depósito: Latitud inválida");
+        if (this.longitude == null || this.longitude < -180 || this.longitude > 180) throw new BadRequestError("Ubicación del depósito: Longitud inválida");
 
         if (this.capacity == null || this.capacity < 0) throw new BadRequestError("La capacidad debe ser un número positivo.");
         if (this.installation_height == null || this.installation_height < 0) throw new BadRequestError("La altura de instalación debe ser un número positivo.");
