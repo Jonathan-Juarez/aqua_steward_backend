@@ -9,6 +9,8 @@ class Deposit {
     capacity;
     installation_height;
     fill_gap;
+    latitude;
+    longitude;
     owner_id;
     sensors;
     createdAt;
@@ -20,6 +22,8 @@ class Deposit {
         this.capacity = data.capacity;
         this.installation_height = data.installation_height;
         this.fill_gap = data.fill_gap;
+        this.latitude = data.latitude;
+        this.longitude = data.longitude;
         this.owner_id = data.owner_id;
         // Array de sensores con los valores enviados por el usuario, si no se envían se inicializa vacío.
         this.sensors = data.sensors || [];
@@ -31,6 +35,10 @@ class Deposit {
         if (!this.ip || !macRegex.test(this.ip)) {
             throw new BadRequestError_1.BadRequestError("Dirección MAC inválida");
         }
+        if (this.latitude == null || this.latitude < -90 || this.latitude > 90)
+            throw new BadRequestError_1.BadRequestError("Ubicación del depósito: Latitud inválida");
+        if (this.longitude == null || this.longitude < -180 || this.longitude > 180)
+            throw new BadRequestError_1.BadRequestError("Ubicación del depósito: Longitud inválida");
         if (this.capacity == null || this.capacity < 0)
             throw new BadRequestError_1.BadRequestError("La capacidad debe ser un número positivo.");
         if (this.installation_height == null || this.installation_height < 0)

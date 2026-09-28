@@ -34,6 +34,8 @@ class GetDepositsUseCase {
                 capacity: deposit.capacity,
                 installation_height: deposit.installation_height,
                 fill_gap: deposit.fill_gap,
+                latitude: deposit.latitude,
+                longitude: deposit.longitude,
                 owner_id: deposit.owner_id,
                 sensors: deposit.sensors,
                 createdAt: deposit.createdAt,

@@ -32,11 +32,11 @@ class UpdateDepositUseCase {
         });
         // Se validan las reglas de negocio en la Entidad (IP, dimensiones y al menos un sensor activo).
         updatedDeposit.validate();
-        // Si cambió la IP, se verifica que no esté duplicada en otro depósito.
+        // Si cambió el identificador MAC, se verifica que no esté duplicado en otro depósito.
         if (data.ip && data.ip !== existingDeposit.ip) {
             const ipConflict = await this.depositRepository.findByIp(data.ip);
             if (ipConflict)
-                throw new ConflictError_1.ConflictError("La IP ya pertenece a otro depósito");
+                throw new ConflictError_1.ConflictError("La dirección MAC ya pertenece a otro depósito");
         }
         // Se guardan los cambios.
         return await this.depositRepository.update(id, updatedDeposit);

@@ -27,7 +27,7 @@ const authorizeRole = (allowedRoles) => {
                 return next();
             // Verificación del creador directo del depósito
             const deposit = await deposit_model_1.default.findById(depositId);
-            if (deposit && deposit.owner_id.toString() === userId.toString()) {
+            if (deposit && deposit.owner_id?.toString() === userId.toString()) {
                 return next();
             }
             // Verificación del rol asignado en el depósito

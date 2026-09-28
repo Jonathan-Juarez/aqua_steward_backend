@@ -24,6 +24,14 @@ const DepositsSchema = new mongoose_1.Schema({
         type: Number,
         required: true
     },
+    latitude: {
+        type: Number,
+        required: true
+    },
+    longitude: {
+        type: Number,
+        required: true
+    },
     owner_id: {
         type: mongoose_1.Schema.Types.ObjectId,
         required: true

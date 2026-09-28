@@ -20,13 +20,15 @@ class CreateDepositUseCase {
             capacity: dto.capacity,
             installation_height: dto.installation_height,
             fill_gap: dto.fill_gap,
+            latitude: dto.latitude,
+            longitude: dto.longitude,
             owner_id: dto.owner_id,
             sensors: dto.sensors
         });
         newDeposit.validate();
         const existingDeposit = await this.depositRepository.findByIp(newDeposit.ip);
         if (existingDeposit) {
-            throw new ConflictError_1.ConflictError("La IP ya existe en un depósito");
+            throw new ConflictError_1.ConflictError("La dirección MAC ya existe en un depósito");
         }
         const savedDeposit = await this.depositRepository.save(newDeposit);
         // Tras crear exitosamente el depósito, se busca al usuario que lo creó y se añade un objeto en assigned_deposit { role: "owner", deposit: savedDeposit.id }.
